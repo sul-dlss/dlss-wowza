@@ -1,0 +1,26 @@
+apply plugin: 'java'
+
+version = '0.0.1'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.13'
+}
+
+dependencies {
+    compile fileTree('lib')
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
+        }
+    }
+    test {
+        java {
+            srcDir 'test'
+        }
+    }
+}
