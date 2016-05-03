@@ -1,2 +1,4 @@
 dlss-wowza.jar
 **/*.class
+build/
+.gradle
