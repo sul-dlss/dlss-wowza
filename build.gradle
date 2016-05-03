@@ -1,4 +1,5 @@
 apply plugin: 'java'
+apply plugin: 'jacoco'
 
 version = '0.0.1'
 sourceCompatibility = 1.8
@@ -6,6 +7,11 @@ targetCompatibility = 1.8
 
 task wrapper(type: Wrapper) {
     gradleVersion = '2.13'
+}
+
+// for jacoco plugin
+repositories {
+    mavenCentral()
 }
 
 dependencies {
@@ -24,3 +30,13 @@ sourceSets {
         }
     }
 }
+
+jacocoTestReport {
+    reports {
+        // xml for Codecov
+        xml.enabled = true
+        html.enabled = true
+    }
+}
+
+check.dependsOn jacocoTestReport
