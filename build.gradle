@@ -12,9 +12,8 @@ task wrapper(type: Wrapper) {
     gradleVersion = '2.13'
 }
 
-// for jacoco plugin
 repositories {
-    mavenCentral()
+    mavenCentral() // for jacoco and kt3k.coveralls plugins
 }
 
 dependencies {
