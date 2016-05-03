@@ -5,5 +5,7 @@ jdk:
 
 script: ./gradlew check
 
+after_success: ./gradlew jacocoTestReport coveralls
+
 notifications:
   email: false

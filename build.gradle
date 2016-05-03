@@ -1,5 +1,8 @@
-apply plugin: 'java'
-apply plugin: 'jacoco'
+plugins {
+    id 'java'
+    id 'jacoco'
+    id 'com.github.kt3k.coveralls' version '2.6.3'
+}
 
 version = '0.0.1'
 sourceCompatibility = 1.8
@@ -33,8 +36,7 @@ sourceSets {
 
 jacocoTestReport {
     reports {
-        // xml for Codecov
-        xml.enabled = true
+        xml.enabled = true // coveralls plugin depends on xml format report
         html.enabled = true
     }
 }
