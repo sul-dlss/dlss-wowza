@@ -6,14 +6,11 @@ import java.nio.charset.Charset;
 import java.util.List;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
-import com.wowza.wms.amf.AMFDataList;
 import com.wowza.wms.application.IApplicationInstance;
-import com.wowza.wms.client.IClient;
 import com.wowza.wms.httpstreamer.cupertinostreaming.httpstreamer.HTTPStreamerSessionCupertino;
 import com.wowza.wms.httpstreamer.model.IHTTPStreamerSession;
 import com.wowza.wms.httpstreamer.mpegdashstreaming.httpstreamer.HTTPStreamerSessionMPEGDash;
 import com.wowza.wms.module.ModuleBase;
-import com.wowza.wms.request.RequestFunction;
 
 
 public class SulWowza extends ModuleBase
@@ -54,7 +51,7 @@ public class SulWowza extends ModuleBase
     void authorizeSession(IHTTPStreamerSession httpSession)
     {
     	String query = httpSession.getQueryStr();
-    	if(authorize(query))
+    	if (authorize(query))
     		httpSession.acceptSession();
     	else httpSession.rejectSession();
     }
