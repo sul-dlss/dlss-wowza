@@ -2,3 +2,12 @@ dlss-wowza.jar
 **/*.class
 build/
 .gradle
+
+# eclipse project files
+.classpath
+.externalToolBuilders/
+.project
+bin/
+build.xml
+
+eclipse-bin/
