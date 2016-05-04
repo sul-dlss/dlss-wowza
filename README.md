@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/sul-dlss/dlss-wowza.svg?branch=master)](https://travis-ci.org/sul-dlss/dlss-wowza)
+[![Build Status](https://travis-ci.org/sul-dlss/dlss-wowza.svg?branch=master)](https://travis-ci.org/sul-dlss/dlss-wowza) [![Coverage Status](https://coveralls.io/repos/github/sul-dlss/dlss-wowza/badge.svg?branch=master)](https://coveralls.io/github/sul-dlss/dlss-wowza?branch=master)
 
 # dlss-wowza
 Wowza server side modules.  Uses Gradle (with the Gradle wrapper) as the build tool; akin to Ruby's rake.
