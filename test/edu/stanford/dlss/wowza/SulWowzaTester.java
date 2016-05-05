@@ -172,15 +172,66 @@ public class SulWowzaTester {
 		verify(spyModule).validateAuthToken(authToken);
 	}
 
-//	@Test
+	@Test
 	public void testGetAuthToken()
 	{
-		fail("Not yet implemented");
+		String queryStr = "token=encryptedStacksMediaToken";
+		SulWowza testModule = new SulWowza();
+		assertEquals("encryptedStacksMediaToken", testModule.getAuthToken(queryStr));
+	}
+
+	@Test
+	public void testGetAuthTokenIgnoresOtherParams()
+	{
+		String queryStr = "ignored=ignored&token=encryptedStacksMediaToken&anything=anythingElse";
+		SulWowza testModule = new SulWowza();
+		assertEquals("encryptedStacksMediaToken", testModule.getAuthToken(queryStr));
+	}
+
+	@Test
+	public void testGetAuthTokenEmptyTokenParam()
+	{
+		String queryStr = "ignored=ignored&token=&anything=anythingElse";
+		SulWowza testModule = new SulWowza();
+		assertEquals("", testModule.getAuthToken(queryStr));
+	}
+
+	@Test
+	public void testGetAuthTokenMissingTokenParam()
+	{
+		String queryStr = "ignored=ignored&anything=anythingElse";
+		SulWowza testModule = new SulWowza();
+		assertNull(testModule.getAuthToken(queryStr));
+	}
+
+	@Test
+	public void testGetAuthTokenEmptyQueryStr()
+	{
+		SulWowza testModule = new SulWowza();
+		assertNull(testModule.getAuthToken(""));
+	}
+
+	@Test
+	public void testGetAuthTokenNullQueryStr()
+	{
+		SulWowza testModule = new SulWowza();
+		assertNull(testModule.getAuthToken(null));
 	}
 
 //	@Test
 	public void testValidateAuthToken()
 	{
+		// TODO:  need to implement this method first
+		// tests for:
+		//   token is null (?) (missing param?  missing value?)
+		//   token is empty string
+		//   user IP is missing
+		//   user IP is wrong
+		//   druid is missing
+		//   druid is wrong
+		//   filename is wrong
+		//   filename is wrong
+		//   token is expired
 		fail("Not yet implemented");
 	}
 }
