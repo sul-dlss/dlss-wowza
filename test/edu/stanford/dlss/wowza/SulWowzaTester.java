@@ -157,10 +157,19 @@ public class SulWowzaTester {
 		verify(sessionMock).rejectSession();
 	}
 
-//	@Test
+	@Test
 	public void testAuthorize()
 	{
-		fail("Not yet implemented");
+		String queryStr = "authorize=me";
+		String authToken = "token";
+
+		SulWowza testModule = new SulWowza();
+		SulWowza spyModule = spy(testModule);
+		when(spyModule.getAuthToken(queryStr)).thenReturn(authToken);
+
+		spyModule.authorize(queryStr);
+		verify(spyModule).getAuthToken(queryStr);
+		verify(spyModule).validateAuthToken(authToken);
 	}
 
 //	@Test
