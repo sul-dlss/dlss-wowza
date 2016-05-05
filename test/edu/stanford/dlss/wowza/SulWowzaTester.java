@@ -10,6 +10,7 @@ import org.apache.log4j.*;
 
 import com.wowza.wms.application.IApplicationInstance;
 import com.wowza.wms.application.WMSProperties;
+import com.wowza.wms.httpstreamer.model.IHTTPStreamerSession;
 
 import java.io.ByteArrayOutputStream;
 
@@ -36,8 +37,8 @@ public class SulWowzaTester {
 		try {
 			testModule.onAppStart(appInstanceMock);
 			String logMsg = out.toString();
-			assertThat(logMsg, allOf(containsString("Unable to initialize"), 
-									containsString("java.net.MalformedURLException"), 
+			assertThat(logMsg, allOf(containsString("Unable to initialize"),
+									containsString("java.net.MalformedURLException"),
 									containsString("no protocol")));
 		} finally {
 			logger.removeAppender(appender);
@@ -88,7 +89,7 @@ public class SulWowzaTester {
 		when(mockProperties.getPropertyStr("stacksURL", testModule.defaultUrl)).thenReturn("http://example.org");
 		IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
 		when(appInstanceMock.getProperties()).thenReturn(mockProperties);
-		
+
 		try {
 			testModule.onAppStart(appInstanceMock);
 			String logMsg = out.toString();
@@ -110,10 +111,38 @@ public class SulWowzaTester {
 		fail("Not yet implemented");
 	}
 
-//	@Test
-	public void testAuthorizeSession()
+	@Test
+	public void testAuthorizeSessionAcceptsIfAuthorized()
 	{
-		fail("Not yet implemented");
+		String queryStr = "authorized=yes";
+
+		SulWowza testModule = new SulWowza();
+		SulWowza spyModule = spy(testModule);
+		when(spyModule.authorize(queryStr)).thenReturn(true);
+
+		IHTTPStreamerSession sessionMock = mock(IHTTPStreamerSession.class);
+		when(sessionMock.getQueryStr()).thenReturn(queryStr);
+
+		spyModule.authorizeSession(sessionMock);
+
+		verify(sessionMock).acceptSession();
+	}
+
+	@Test
+	public void testAuthorizeSessionRejectsIfNotAuthorized()
+	{
+		String queryStr = "authorized=no";
+
+		SulWowza testModule = new SulWowza();
+		SulWowza spyModule = spy(testModule);
+		when(spyModule.authorize(queryStr)).thenReturn(false);
+
+		IHTTPStreamerSession sessionMock = mock(IHTTPStreamerSession.class);
+		when(sessionMock.getQueryStr()).thenReturn(queryStr);
+
+		spyModule.authorizeSession(sessionMock);
+
+		verify(sessionMock).rejectSession();
 	}
 
 //	@Test
