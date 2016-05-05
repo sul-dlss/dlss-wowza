@@ -15,12 +15,12 @@ import com.wowza.wms.module.ModuleBase;
 
 public class SulWowza extends ModuleBase
 {
-	
+
 	public String defaultUrl = "http://localhost:3000/";
     protected URL baseAuthUrl;
 
-    // onAppStart() is defined in the IModuleOnApp interface. This method is invoked when a Wowza application
-    // instance is started.
+    // invoked when a Wowza application instance is started;
+    // defined in the IModuleOnApp interface
     public void onAppStart(IApplicationInstance appInstance)
     {
     	String stacksURL = appInstance.getProperties().getPropertyStr("stacksURL", defaultUrl);
@@ -35,38 +35,42 @@ public class SulWowza extends ModuleBase
     	}
     }
 
-    
+    // Invoked when an HTTP MPEGDash Streaming session is created; 
+    // defined in IModuleOnHTTPMPEGDashStreamingSession module interfaces
     public void onHTTPMPEGDashStreamingSessionCreate(HTTPStreamerSessionMPEGDash httpSession)
     {
     	getLogger().info("Tommy: SulWowza onHTTPMPEGDashStreamingSessionCreate: " + httpSession.getSessionId());
     	authorizeSession(httpSession);
     }
-    
+
+    // Invoked when an HTTP Cupertino Streaming session is created; 
+    // defined in IModuleOnHTTPCupertinoStreamingSession interface
     public void onHTTPCupertinoStreamingSessionCreate(HTTPStreamerSessionCupertino httpSession)
     {
 		getLogger().info("Tommy: SulWowza onHTTPCupertinoStreamingSessionCreate: ");
 		authorizeSession(httpSession);
 	}
-    
+
     void authorizeSession(IHTTPStreamerSession httpSession)
     {
-    	String query = httpSession.getQueryStr();
-    	if (authorize(query))
-    		httpSession.acceptSession();
-    	else httpSession.rejectSession();
+		String queryStr = httpSession.getQueryStr();
+		if (authorize(queryStr))
+			httpSession.acceptSession();
+		else
+			httpSession.rejectSession();
     }
-    
-    boolean authorize(String query)
+
+    boolean authorize(String queryStr)
     {
-    	String authToken = getAuthToken(query);
-    	return validateAuthToken(authToken);
+		String authToken = getAuthToken(queryStr);
+		return validateAuthToken(authToken);
     }
-    
-    String getAuthToken(String parameters)
+
+    String getAuthToken(String queryStr)
     {
-    	if (parameters != null)
+		if (queryStr != null && queryStr.length() > 6)  // "token=" is 6 chars
     	{
-    		String[] parts = parameters.split("\\?");
+			String[] parts = queryStr.split("\\?");
     		String query = parts[parts.length-1];
     		List<NameValuePair> httpParams = URLEncodedUtils.parse(query,Charset.defaultCharset());
     		for (NameValuePair param:httpParams)
@@ -75,7 +79,7 @@ public class SulWowza extends ModuleBase
     	}
     	return null;
     }
-    
+
     boolean validateAuthToken(String token)
     {
     	getLogger().info("Tommy: SulWowza token = " + token);
