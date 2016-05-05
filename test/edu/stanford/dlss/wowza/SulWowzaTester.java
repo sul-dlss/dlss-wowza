@@ -10,7 +10,9 @@ import org.apache.log4j.*;
 
 import com.wowza.wms.application.IApplicationInstance;
 import com.wowza.wms.application.WMSProperties;
+import com.wowza.wms.httpstreamer.cupertinostreaming.httpstreamer.HTTPStreamerSessionCupertino;
 import com.wowza.wms.httpstreamer.model.IHTTPStreamerSession;
+import com.wowza.wms.httpstreamer.mpegdashstreaming.httpstreamer.HTTPStreamerSessionMPEGDash;
 
 import java.io.ByteArrayOutputStream;
 
@@ -99,16 +101,26 @@ public class SulWowzaTester {
 		}
 	}
 
-//	@Test
+	@Test
 	public void testOnHTTPMPEGDashStreamingSessionCreate()
 	{
-		fail("Not yet implemented");
+		SulWowza testModule = new SulWowza();
+		SulWowza spyModule = spy(testModule);
+		HTTPStreamerSessionCupertino sessionMock = mock(HTTPStreamerSessionCupertino.class);
+		spyModule.onHTTPCupertinoStreamingSessionCreate(sessionMock);
+
+		verify(spyModule).authorizeSession(sessionMock);
 	}
 
-//	@Test
+	@Test
 	public void testOnHTTPCupertinoStreamingSessionCreate()
 	{
-		fail("Not yet implemented");
+		SulWowza testModule = new SulWowza();
+		SulWowza spyModule = spy(testModule);
+		HTTPStreamerSessionMPEGDash sessionMock = mock(HTTPStreamerSessionMPEGDash.class);
+		spyModule.onHTTPMPEGDashStreamingSessionCreate(sessionMock);
+
+		verify(spyModule).authorizeSession(sessionMock);
 	}
 
 	@Test
