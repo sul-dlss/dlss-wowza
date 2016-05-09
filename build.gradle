@@ -14,10 +14,12 @@ task wrapper(type: Wrapper) {
 
 repositories {
     mavenCentral() // for jacoco and kt3k.coveralls plugins
+    jcenter() // for mockito
 }
 
 dependencies {
     compile fileTree('lib')
+    testCompile "org.mockito:mockito-core:1.+"
 }
 
 sourceSets {
@@ -29,6 +31,9 @@ sourceSets {
     test {
         java {
             srcDir 'test'
+        }
+        resources {
+            srcDir 'test/resources'
         }
     }
 }
