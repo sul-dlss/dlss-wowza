@@ -50,7 +50,10 @@ public class SulWowza extends ModuleBase
     public void onHTTPMPEGDashStreamingSessionCreate(HTTPStreamerSessionMPEGDash httpSession)
     {
         if (invalidConfiguration)
+        {
+            getLogger().error(this.getClass().getSimpleName() + " onHTTPMPEGDashStreamingSessionCreate: rejecting session due to invalid stacksURL property " + httpSession.getStreamName());
             httpSession.rejectSession();
+        }
         else
         {
             getLogger().info(this.getClass().getSimpleName() + " onHTTPMPEGDashStreamingSessionCreate: " + httpSession.getStreamName());
@@ -64,7 +67,10 @@ public class SulWowza extends ModuleBase
     public void onHTTPCupertinoStreamingSessionCreate(HTTPStreamerSessionCupertino httpSession)
     {
         if (invalidConfiguration)
+        {
+            getLogger().error(this.getClass().getSimpleName() + " onHTTPCupertinoStreamingSessionCreate: rejecting session due to invalid stacksURL property " + httpSession.getStreamName());
             httpSession.rejectSession();
+        }
         else
         {
             getLogger().info(this.getClass().getSimpleName() + " onHTTPCupertinoStreamingSessionCreate: " + httpSession.getStreamName());
