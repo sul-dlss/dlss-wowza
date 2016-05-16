@@ -15,6 +15,8 @@ import com.wowza.wms.httpstreamer.model.IHTTPStreamerSession;
 import com.wowza.wms.httpstreamer.mpegdashstreaming.httpstreamer.HTTPStreamerSessionMPEGDash;
 
 import java.io.ByteArrayOutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 public class TestSulWowza
 {
@@ -453,7 +455,7 @@ public class TestSulWowza
     }
 
     @Test
-    /** verifyStacksToken(4 strings) calls getVerifyStacksTokenUrl */
+    /** verifyStacksToken calls getVerifyStacksTokenUrl */
     public void verifyStacksToken_getsVerifyStacksTokenUrl()
     {
         SulWowza spyModule = spy(testModule);
@@ -462,23 +464,25 @@ public class TestSulWowza
     }
 
     @Test
-    /** verifyStacksToken(4 strings) calls verifyStacksToken(UrlStr) */
+    /** verifyStacksToken calls verifyTokenAgainstStacksService */
     public void verifyStacksToken_verifiesStacksTokenUrl()
+            throws MalformedURLException
     {
+        String expUrlStr = SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL + "/media///verify_token?stacks_token=&user_ip=";
         SulWowza spyModule = spy(testModule);
         spyModule.verifyStacksToken(anyString(), anyString(), anyString(), anyString());
-        verify(spyModule).verifyTokenAgainstStacksService(anyString());
+        verify(spyModule).verifyTokenAgainstStacksService(new URL(expUrlStr));
     }
 
     @Test
-    /** if the result to getVerifyStacksTokenUrl is null, don't call verifyStacksToken(urlStr) and return false */
+    /** if the result to getVerifyStacksTokenUrl is null, don't call verifyTokenAgainstStacksService and return false */
     public void verifyStacksToken_rejectsForNullUrl()
     {
         SulWowza spyModule = spy(testModule);
         when(spyModule.getVerifyStacksTokenUrl(anyString(), anyString(), anyString(), anyString())).thenReturn(null);
         boolean result = spyModule.verifyStacksToken(anyString(), anyString(), anyString(), anyString());
         assertFalse(result);
-        verify(spyModule, never()).verifyTokenAgainstStacksService(anyString());
+        verify(spyModule, never()).verifyTokenAgainstStacksService(null);
     }
 
     @Test
@@ -722,10 +726,10 @@ public class TestSulWowza
         String userIp = "0.0.0.0";
         String expPath = "/media/" + druid + "/" + filename + "/verify_token";
         String expQueryStr = "?stacks_token=" + stacksToken + "&user_ip=" + userIp;
-        String expUrl = SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL + expPath + expQueryStr;
+        String expUrlStr = SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL + expPath + expQueryStr;
 
-        String resultUrl = testModule.getVerifyStacksTokenUrl(stacksToken, druid, filename, userIp);
-        assertEquals(expUrl, resultUrl);
+        URL resultUrl = testModule.getVerifyStacksTokenUrl(stacksToken, druid, filename, userIp);
+        assertEquals(expUrlStr, resultUrl.toString());
     }
 
     @Test
@@ -747,7 +751,7 @@ public class TestSulWowza
 
         try
         {
-            String resultUrl = testModule.getVerifyStacksTokenUrl(stacksToken, "oo000oo0000", "filename.ext", "0.0.0.0");
+            URL resultUrl = testModule.getVerifyStacksTokenUrl(stacksToken, "oo000oo0000", "filename.ext", "0.0.0.0");
             assertNull(resultUrl);
             String logMsg = out.toString();
             assertThat(logMsg, allOf(containsString("ERROR"),
@@ -763,12 +767,14 @@ public class TestSulWowza
 
     //@Test
     public void verifyTokenAgainstStacksService_wUrlString_logsRequestMade()
+            throws MalformedURLException
     {
         fail("don't know how to test this without spinning up a local stacks instance");
 
         String expPath = "/media/oo000oo0000/filename.ext/verify_token";
         String expQueryStr = "?stacks_token=" + stacksToken + "&user_ip=0.0.0.0";
         String urlStr = "http://localhost:3000" + expPath + expQueryStr;
+        URL url = new URL(urlStr);
 
         // logger is the rootLogger, per test/resources/log4j.properties
         Logger logger = Logger.getRootLogger();
@@ -779,7 +785,7 @@ public class TestSulWowza
 
         try
         {
-            boolean result = testModule.verifyTokenAgainstStacksService(urlStr);
+            boolean result = testModule.verifyTokenAgainstStacksService(url);
             assertTrue(result);
             String logMsg = out.toString();
             assertThat(logMsg, allOf(containsString("INFO"),
@@ -796,10 +802,12 @@ public class TestSulWowza
     @Test
     /** it logs an error and returns false */
     public void verifyTokenAgainstStacksService_wException()
+            throws MalformedURLException
     {
         String expPath = "/media/oo000oo0000/filename.ext/verify_token";
         String expQueryStr = "?stacks_token=" + stacksToken + "&user_ip=0.0.0.0";
         String urlStr = "http://localhost:6666" + expPath + expQueryStr;
+        URL url = new URL(urlStr);
 
         // logger is the rootLogger, per test/resources/log4j.properties
         Logger logger = Logger.getRootLogger();
@@ -810,7 +818,7 @@ public class TestSulWowza
 
         try
         {
-            boolean result = testModule.verifyTokenAgainstStacksService(urlStr);
+            boolean result = testModule.verifyTokenAgainstStacksService(url);
             assertFalse(result);
             String logMsg = out.toString();
             assertThat(logMsg, allOf(containsString("ERROR"),

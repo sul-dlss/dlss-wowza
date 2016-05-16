@@ -173,7 +173,7 @@ public class SulWowza extends ModuleBase
     /** Assumption: stacksToken, druid, userIp and filename are all reasonable values (non-null, not empty, etc.) */
     boolean verifyStacksToken(String stacksToken, String druid, String filename, String userIp)
     {
-        String fullUrl = getVerifyStacksTokenUrl(stacksToken, druid, filename, userIp);
+        URL fullUrl = getVerifyStacksTokenUrl(stacksToken, druid, filename, userIp);
         if (fullUrl != null)
             return verifyTokenAgainstStacksService(fullUrl);
         else
@@ -280,15 +280,14 @@ public class SulWowza extends ModuleBase
     }
 
     /** Assumption: stacksToken, druid, userIp and filename are all reasonable values (non-null, not empty, etc.) */
-    String getVerifyStacksTokenUrl(String stacksToken, String druid, String filename, String userIp)
+    URL getVerifyStacksTokenUrl(String stacksToken, String druid, String filename, String userIp)
     {
         // TODO:  Url encode anything?   utf-8 charset affect anything? (filename, stacksToken)
         String queryStr = "stacks_token=" + stacksToken + "&user_ip=" + userIp;
         String fullUrl = stacksTokenVerificationBaseUrl + "/media/" + druid + "/" + filename + "/verify_token?" + queryStr;
         try
         {
-            new URL(fullUrl);
-            return fullUrl;
+            return new URL(fullUrl);
         }
         catch (MalformedURLException err)
         {
@@ -297,13 +296,12 @@ public class SulWowza extends ModuleBase
         }
     }
 
-    /** Assumption: verifyStacksTokenRequestUrl is a valid URL */
-    boolean verifyTokenAgainstStacksService(String verifyStacksTokenUrl)
+    /** Assumption: verifyStacksTokenUrl is a valid URL */
+    boolean verifyTokenAgainstStacksService(URL verifyStacksTokenUrl)
     {
         try
         {
-            URL tokenVerifyURL = new URL(verifyStacksTokenUrl);
-            HttpURLConnection stacksConn = (HttpURLConnection) tokenVerifyURL.openConnection();
+            HttpURLConnection stacksConn = (HttpURLConnection) verifyStacksTokenUrl.openConnection();
             stacksConn.setRequestMethod("HEAD");
             stacksConn.setConnectTimeout(stacksConnectionTimeout * 1000); // need milliseconds
             stacksConn.setReadTimeout(stacksReadTimeout * 1000);  // need milliseconds
