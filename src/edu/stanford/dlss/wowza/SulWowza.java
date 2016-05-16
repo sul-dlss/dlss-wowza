@@ -18,53 +18,128 @@ import com.wowza.wms.module.ModuleBase;
 public class SulWowza extends ModuleBase
 {
 
-    public static final String DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL = "http://localhost:3000";
     static String stacksTokenVerificationBaseUrl;
-    /** default setting for stacks service connection timeout (time to establish a connection), in seconds */
-    public static final int DEFAULT_STACKS_CONNECTION_TIMEOUT = 30;
     static int stacksConnectionTimeout;
-    /** default setting for stacks service read timeout (time for reading stream after connection is established),
-     * in seconds */
-    public static final int DEFAULT_STACKS_READ_TIMEOUT = 30;
     static int stacksReadTimeout;
+
+    /** configuration is invalid if the stacks url is malformed */
+    boolean invalidConfiguration = false;
 
     /** invoked when a Wowza application instance is started;
      * defined in the IModuleOnApp interface */
     public void onAppStart(IApplicationInstance appInstance)
     {
-        // TODO:  this approach expects the properties to be set in Application.xml
-        //   maybe that's good, or maybe we want to load a java properties file from our plugin jar itself?
-        stacksConnectionTimeout = appInstance.getProperties().getPropertyInt("stacksConnectionTimeout", DEFAULT_STACKS_CONNECTION_TIMEOUT);
-        getLogger().info(this.getClass().getSimpleName() + " stacks connection timeout is " + String.valueOf(stacksConnectionTimeout));
-        stacksReadTimeout = appInstance.getProperties().getPropertyInt("stacksReadTimeout", DEFAULT_STACKS_READ_TIMEOUT);
-        getLogger().info(this.getClass().getSimpleName() + " stacks read timeout is " + String.valueOf(stacksReadTimeout));
-
-        stacksTokenVerificationBaseUrl = appInstance.getProperties().getPropertyStr("stacksURL", DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL);;
+        setStacksConnectionTimeout(appInstance);
+        setStacksReadTimeout(appInstance);
+        stacksTokenVerificationBaseUrl = getStacksUrl(appInstance);
         try
         {
             new URL(stacksTokenVerificationBaseUrl);
-            getLogger().info(this.getClass().getSimpleName() + " stacks token verification baseUrl is " + stacksTokenVerificationBaseUrl);
+            getLogger().info(this.getClass().getSimpleName() + "stacksURL is " + stacksTokenVerificationBaseUrl);
         }
-        catch (MalformedURLException err)
+        catch (MalformedURLException e)
         {
-            getLogger().error(this.getClass().getSimpleName() + " unable to initialize module due to bad stacksURL: ", err);
+            invalidConfiguration = true;
+            getLogger().error(this.getClass().getSimpleName() + " unable to initialize module due to bad stacksURL: ", e);
         }
     }
 
     /** Invoked when an HTTP MPEGDash Streaming session is created;
-     * defined in IModuleOnHTTPMPEGDashStreamingSession module interfaces */
+     * defined in IModuleOnHTTPMPEGDashStreamingSession module interfaces
+     * rejectSession immediately if invalidConfiguration */
     public void onHTTPMPEGDashStreamingSessionCreate(HTTPStreamerSessionMPEGDash httpSession)
     {
-        getLogger().info(this.getClass().getSimpleName() + " onHTTPMPEGDashStreamingSessionCreate: " + httpSession.getStreamName());
-        authorizeSession(httpSession);
+        if (invalidConfiguration)
+            httpSession.rejectSession();
+        else
+        {
+            getLogger().info(this.getClass().getSimpleName() + " onHTTPMPEGDashStreamingSessionCreate: " + httpSession.getStreamName());
+            authorizeSession(httpSession);
+        }
     }
 
     /** Invoked when an HTTP Cupertino Streaming session is created  (for hls protocol (Safari, iphones));
-     * defined in IModuleOnHTTPCupertinoStreamingSession interface */
+     * defined in IModuleOnHTTPCupertinoStreamingSession interface
+     * rejectSession immediately if invalidConfiguration */
     public void onHTTPCupertinoStreamingSessionCreate(HTTPStreamerSessionCupertino httpSession)
     {
-        getLogger().info(this.getClass().getSimpleName() + " onHTTPCupertinoStreamingSessionCreate: " + httpSession.getStreamName());
-        authorizeSession(httpSession);
+        if (invalidConfiguration)
+            httpSession.rejectSession();
+        else
+        {
+            getLogger().info(this.getClass().getSimpleName() + " onHTTPCupertinoStreamingSessionCreate: " + httpSession.getStreamName());
+            authorizeSession(httpSession);
+        }
+    }
+
+
+    // --------------------------------- the public API is above this line ----------------------------------------
+
+    /** default setting for stacks service connection timeout (time to establish a connection), in seconds */
+    public static final int DEFAULT_STACKS_CONNECTION_TIMEOUT = 30;
+
+    // TODO:  this approach expects the properties to be set in Application.xml
+    //   maybe that's good, or maybe we want to load a java properties file from our plugin jar itself?
+    // NOTE:  aware of duplicated code;  shameless green phase
+    /** gets stacksConnectionTimeout from properties; uses default if invalid */
+    void setStacksConnectionTimeout(IApplicationInstance appInstance)
+    {
+        try
+        {
+            stacksConnectionTimeout = appInstance.getProperties().getPropertyInt("stacksConnectionTimeout", DEFAULT_STACKS_CONNECTION_TIMEOUT);
+            if (stacksConnectionTimeout < 1)
+                stacksConnectionTimeout = DEFAULT_STACKS_CONNECTION_TIMEOUT;
+        }
+        catch (Exception e)
+        {
+            getLogger().info(this.getClass().getSimpleName() +
+                            " unable to read stacksConnectionTimeout from properties; using default: " + e);
+            stacksConnectionTimeout = DEFAULT_STACKS_CONNECTION_TIMEOUT;
+        }
+        getLogger().info(this.getClass().getSimpleName() + " stacksConnectionTimeout is " + String.valueOf(stacksConnectionTimeout));
+    }
+
+    /** default setting for stacks service read timeout (time for reading stream after connection is established),
+     * in seconds */
+    public static final int DEFAULT_STACKS_READ_TIMEOUT = 30;
+
+    // TODO:  this approach expects the properties to be set in Application.xml
+    //   maybe that's good, or maybe we want to load a java properties file from our plugin jar itself?
+    // NOTE:  aware of duplicated code;  shameless green phase
+    /** gets stacksReadTimeout from properties; uses default if invalid */
+    void setStacksReadTimeout(IApplicationInstance appInstance)
+    {
+        try
+        {
+            stacksReadTimeout = appInstance.getProperties().getPropertyInt("stacksReadTimeout", DEFAULT_STACKS_READ_TIMEOUT);
+            if (stacksReadTimeout < 1)
+                stacksReadTimeout = DEFAULT_STACKS_READ_TIMEOUT;
+        }
+        catch (Exception e)
+        {
+            getLogger().info(this.getClass().getSimpleName() +
+                            " unable to read stacksReadTimeout from properties; using default: " + e);
+            stacksReadTimeout = DEFAULT_STACKS_READ_TIMEOUT;
+        }
+        getLogger().info(this.getClass().getSimpleName() + " stacksReadTimeout is " + String.valueOf(stacksReadTimeout));
+    }
+
+    public static final String DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL = "http://localhost:3000";
+
+    // TODO:  this approach expects the properties to be set in Application.xml
+    //   maybe that's good, or maybe we want to load a java properties file from our plugin jar itself?
+    /** reads stacksUrl from properties */
+    String getStacksUrl(IApplicationInstance appInstance)
+    {
+        try
+        {
+            return appInstance.getProperties().getPropertyStr("stacksURL", DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL);
+        }
+        catch (Exception e)
+        {
+            getLogger().info(this.getClass().getSimpleName() + " unable to read stacksURL from properties: " + e);
+            return "";
+        }
     }
 
     void authorizeSession(IHTTPStreamerSession httpSession)

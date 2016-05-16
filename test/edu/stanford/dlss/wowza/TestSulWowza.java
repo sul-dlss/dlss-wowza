@@ -29,6 +29,36 @@ public class TestSulWowza
     }
 
     @Test
+    public void onAppStart_calls_setStacksConnectionTimeout()
+    {
+        SulWowza spyModule = spy(testModule);
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        spyModule.onAppStart(appInstanceMock);
+
+        verify(spyModule).setStacksConnectionTimeout(appInstanceMock);
+    }
+
+    @Test
+    public void onAppStart_calls_setStacksReadTimeout()
+    {
+        SulWowza spyModule = spy(testModule);
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        spyModule.onAppStart(appInstanceMock);
+
+        verify(spyModule).setStacksReadTimeout(appInstanceMock);
+    }
+
+    @Test
+    public void onAppStart_calls_getStacksUrl()
+    {
+        SulWowza spyModule = spy(testModule);
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        spyModule.onAppStart(appInstanceMock);
+
+        verify(spyModule).getStacksUrl(appInstanceMock);
+    }
+
+    @Test
     public void onAppStart_validPropertyUrl()
     {
         String exampleUrl = "http://example.org";
@@ -49,6 +79,45 @@ public class TestSulWowza
         when(appInstanceMock.getProperties()).thenReturn(mockProperties);
         testModule.onAppStart(appInstanceMock);
         assertEquals(SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL, SulWowza.stacksTokenVerificationBaseUrl);
+    }
+
+    @Test
+    public void onAppStart_badUrl_setsInvalidConfiguration()
+    {
+        String badUrlStr = "badUrl";
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyStr("stacksURL", SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenReturn(badUrlStr);
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+        testModule.onAppStart(appInstanceMock);
+        assertEquals(badUrlStr, SulWowza.stacksTokenVerificationBaseUrl);
+        assertTrue(testModule.invalidConfiguration);
+    }
+
+    @Test
+    /** not sure if getPropertyStr("propname", actual_value) can return empty string, but just in case */
+    public void onAppStart_urlEmptyStr_setsInvalidConfiguration()
+    {
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyStr("stacksURL", SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenReturn("");
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+        testModule.onAppStart(appInstanceMock);
+        assertEquals("", SulWowza.stacksTokenVerificationBaseUrl);
+        assertTrue(testModule.invalidConfiguration);
+    }
+
+    @Test
+    /** not sure if getPropertyStr("propname", actual_value) can return null, but just in case */
+    public void onAppStart_urlNull_setsInvalidConfiguration()
+    {
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyStr("stacksURL", SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenReturn(null);
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+        testModule.onAppStart(appInstanceMock);
+        assertEquals(null, SulWowza.stacksTokenVerificationBaseUrl);
+        assertTrue(testModule.invalidConfiguration);
     }
 
     @Test
@@ -86,93 +155,151 @@ public class TestSulWowza
     }
 
     @Test
-    public void onAppStart_stacksConnectionTimeout_validPropertyValue()
-    {
-        int exampleValue = 5;
-        WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyInt("stacksConnectionTimeout", SulWowza.DEFAULT_STACKS_CONNECTION_TIMEOUT)).thenReturn(exampleValue);
-        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
-        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
-        testModule.onAppStart(appInstanceMock);
-        assertEquals(exampleValue, SulWowza.stacksConnectionTimeout);
-    }
-
-    @Test
-    public void onAppStart_stacksConnectionTimeout_defaultValue()
-    {
-        WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyInt("stacksConnectionTimeout", SulWowza.DEFAULT_STACKS_CONNECTION_TIMEOUT)).thenReturn(SulWowza.DEFAULT_STACKS_CONNECTION_TIMEOUT);
-        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
-        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
-        testModule.onAppStart(appInstanceMock);
-        assertEquals(SulWowza.DEFAULT_STACKS_CONNECTION_TIMEOUT, SulWowza.stacksConnectionTimeout);
-    }
-
-    @Test
-    public void onAppStart_stacksConnectionTimeout_invalidPropertyValue()
-    {
-        int exampleValue = -4;
-        WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyInt("stacksConnectionTimeout", SulWowza.DEFAULT_STACKS_CONNECTION_TIMEOUT)).thenReturn(exampleValue);
-        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
-        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
-        testModule.onAppStart(appInstanceMock);
-        assertEquals(exampleValue, SulWowza.stacksConnectionTimeout);
-    }
-
-    @Test
-    public void onAppStart_stacksReadTimeout_validPropertyValue()
-    {
-        int exampleValue = 5;
-        WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyInt("stacksReadTimeout", SulWowza.DEFAULT_STACKS_READ_TIMEOUT)).thenReturn(exampleValue);
-        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
-        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
-        testModule.onAppStart(appInstanceMock);
-        assertEquals(exampleValue, SulWowza.stacksReadTimeout);
-    }
-
-    @Test
-    public void onAppStart_stacksReadTimeout_defaultValue()
-    {
-        WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyInt("stacksReadTimeout", SulWowza.DEFAULT_STACKS_READ_TIMEOUT)).thenReturn(SulWowza.DEFAULT_STACKS_READ_TIMEOUT);
-        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
-        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
-        testModule.onAppStart(appInstanceMock);
-        assertEquals(SulWowza.DEFAULT_STACKS_READ_TIMEOUT, SulWowza.stacksReadTimeout);
-    }
-
-    @Test
-    public void onAppStart_stacksReadTimeout_invalidPropertyValue()
-    {
-        int exampleValue = -4;
-        WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyInt("stacksReadTimeout", SulWowza.DEFAULT_STACKS_READ_TIMEOUT)).thenReturn(exampleValue);
-        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
-        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
-        testModule.onAppStart(appInstanceMock);
-        assertEquals(exampleValue, SulWowza.stacksReadTimeout);
-    }
-
-    @Test
-    public void onHTTPMPEGDashStreamingSessionCreate()
+    public void onHTTPMPEGDashStreamingSessionCreate_calls_authorizeSession_ifValidConfiguration()
     {
         SulWowza spyModule = spy(testModule);
         HTTPStreamerSessionCupertino sessionMock = mock(HTTPStreamerSessionCupertino.class);
+        spyModule.invalidConfiguration = false;
         spyModule.onHTTPCupertinoStreamingSessionCreate(sessionMock);
 
         verify(spyModule).authorizeSession(sessionMock);
     }
 
     @Test
-    public void onHTTPCupertinoStreamingSessionCreate()
+    public void onHTTPMPEGDashStreamingSessionCreate_rejectsSession_ifInvalidConfiguration()
     {
+        testModule.invalidConfiguration = true;
+        SulWowza spyModule = spy(testModule);
+        HTTPStreamerSessionCupertino sessionMock = mock(HTTPStreamerSessionCupertino.class);
+        testModule.onHTTPCupertinoStreamingSessionCreate(sessionMock);
+
+        verify(sessionMock).rejectSession();
+        verify(spyModule, never()).authorizeSession(sessionMock);
+    }
+
+    @Test
+    public void onHTTPCupertinoStreamingSessionCreate_calls_authorizeSession_ifValidConfiguration()
+    {
+        SulWowza spyModule = spy(testModule);
+        HTTPStreamerSessionMPEGDash sessionMock = mock(HTTPStreamerSessionMPEGDash.class);
+        spyModule.invalidConfiguration = false;
+        spyModule.onHTTPMPEGDashStreamingSessionCreate(sessionMock);
+
+        verify(spyModule).authorizeSession(sessionMock);
+    }
+
+    @Test
+    public void onHTTPCupertinoStreamingSessionCreate_rejectsSession_ifInvalidConfiguration()
+    {
+        testModule.invalidConfiguration = true;
         SulWowza spyModule = spy(testModule);
         HTTPStreamerSessionMPEGDash sessionMock = mock(HTTPStreamerSessionMPEGDash.class);
         spyModule.onHTTPMPEGDashStreamingSessionCreate(sessionMock);
 
-        verify(spyModule).authorizeSession(sessionMock);
+        verify(sessionMock).rejectSession();
+        verify(spyModule, never()).authorizeSession(sessionMock);
+    }
+
+    @Test
+    public void setStacksConnectionTimeout_validPropertyValue()
+    {
+        int exampleValue = 5;
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyInt("stacksConnectionTimeout", SulWowza.DEFAULT_STACKS_CONNECTION_TIMEOUT)).thenReturn(exampleValue);
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+        testModule.setStacksConnectionTimeout(appInstanceMock);
+        assertEquals(exampleValue, SulWowza.stacksConnectionTimeout);
+    }
+
+    @Test
+    public void setStacksConnectionTimeout_defaultValue()
+    {
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyInt("stacksConnectionTimeout", SulWowza.DEFAULT_STACKS_CONNECTION_TIMEOUT)).thenReturn(SulWowza.DEFAULT_STACKS_CONNECTION_TIMEOUT);
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+        testModule.setStacksConnectionTimeout(appInstanceMock);
+        assertEquals(SulWowza.DEFAULT_STACKS_CONNECTION_TIMEOUT, SulWowza.stacksConnectionTimeout);
+    }
+
+    @Test
+    public void setStacksConnectionTimeout_negativePropertyValue_revertsToDefault()
+    {
+        int exampleValue = -4;
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyInt("stacksConnectionTimeout", SulWowza.DEFAULT_STACKS_CONNECTION_TIMEOUT)).thenReturn(exampleValue);
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+        testModule.setStacksConnectionTimeout(appInstanceMock);
+        assertEquals(SulWowza.DEFAULT_STACKS_CONNECTION_TIMEOUT, SulWowza.stacksConnectionTimeout);
+    }
+
+    @Test
+    public void setStacksConnectionTimeout_revertsToDefault_ifExceptionThrown()
+    {
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyInt("stacksConnectionTimeout", SulWowza.DEFAULT_STACKS_CONNECTION_TIMEOUT)).thenThrow(new java.lang.ClassCastException());
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+        testModule.setStacksConnectionTimeout(appInstanceMock);
+        assertEquals(SulWowza.DEFAULT_STACKS_CONNECTION_TIMEOUT, SulWowza.stacksConnectionTimeout);
+    }
+
+    @Test
+    public void setStacksReadTimeout_validPropertyValue()
+    {
+        int exampleValue = 5;
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyInt("stacksReadTimeout", SulWowza.DEFAULT_STACKS_READ_TIMEOUT)).thenReturn(exampleValue);
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+        testModule.setStacksReadTimeout(appInstanceMock);
+        assertEquals(exampleValue, SulWowza.stacksReadTimeout);
+    }
+
+    @Test
+    public void setStacksReadTimeout_defaultValue()
+    {
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyInt("stacksReadTimeout", SulWowza.DEFAULT_STACKS_READ_TIMEOUT)).thenReturn(SulWowza.DEFAULT_STACKS_READ_TIMEOUT);
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+        testModule.setStacksReadTimeout(appInstanceMock);
+        assertEquals(SulWowza.DEFAULT_STACKS_READ_TIMEOUT, SulWowza.stacksReadTimeout);
+    }
+
+    @Test
+    public void setStacksReadTimeout_negativePropertyValue_revertsToDefault()
+    {
+        int exampleValue = -4;
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyInt("stacksReadTimeout", SulWowza.DEFAULT_STACKS_READ_TIMEOUT)).thenReturn(exampleValue);
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+        testModule.setStacksReadTimeout(appInstanceMock);
+        assertEquals(SulWowza.DEFAULT_STACKS_READ_TIMEOUT, SulWowza.stacksReadTimeout);
+    }
+
+    @Test
+    public void setStacksReadTimeout_revertsToDefault_ifExceptionThrown()
+    {
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyInt("stacksReadTimeout", SulWowza.DEFAULT_STACKS_READ_TIMEOUT)).thenThrow(new java.lang.ClassCastException());
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+        testModule.setStacksReadTimeout(appInstanceMock);
+        assertEquals(SulWowza.DEFAULT_STACKS_READ_TIMEOUT, SulWowza.stacksReadTimeout);
+    }
+
+    @Test
+    public void getStacksUrl_returnsEmptyString_ifExceptionThrown()
+    {
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyStr("stacksURL", SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenThrow(new java.lang.ClassCastException());
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+        assertEquals("", testModule.getStacksUrl(appInstanceMock));
     }
 
     @Test
