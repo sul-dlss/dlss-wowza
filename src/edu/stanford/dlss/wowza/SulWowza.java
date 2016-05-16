@@ -257,7 +257,11 @@ public class SulWowza extends ModuleBase
         if (DRUID_REGEX_PATTERN.matcher(druid).matches())
             return druid;
         else
+        {
+            getLogger().error(this.getClass().getSimpleName() + ": can't parse druid from streamName" +
+                    (streamName == null ? "" : ": " + streamName));
             return null;
+        }
     }
 
     /** the media file to be streamed, as stored under the druid-tree;  needed to verify stacks token
@@ -268,7 +272,11 @@ public class SulWowza extends ModuleBase
         if (filename.length() > 0)
             return filename;
         else
+        {
+            getLogger().error(this.getClass().getSimpleName() + ": can't parse fileName from streamName" +
+                    (streamName == null ? "" : ": " + streamName));
             return null;
+        }
     }
 
     /** Assumption: stacksToken, druid, userIp and filename are all reasonable values (non-null, not empty, etc.) */
