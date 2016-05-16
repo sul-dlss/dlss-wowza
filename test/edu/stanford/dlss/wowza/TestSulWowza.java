@@ -668,7 +668,7 @@ public class TestSulWowza
 
     @Test
     /** it logs an error and returns false */
-    public void verifyTokenAgainstStacksService_wUrlString_IOException()
+    public void verifyTokenAgainstStacksService_wException()
     {
         String expPath = "/media/oo000oo0000/filename.ext/verify_token";
         String expQueryStr = "?stacks_token=" + stacksToken + "&user_ip=0.0.0.0";
@@ -689,7 +689,8 @@ public class TestSulWowza
             assertThat(logMsg, allOf(containsString("ERROR"),
                                      containsString(testModule.getClass().getSimpleName()),
                                      containsString("unable to verify stacks token at"),
-                                     containsString(urlStr)));
+                                     containsString(urlStr),
+                                     containsString("Exception")));
         }
         finally
         {

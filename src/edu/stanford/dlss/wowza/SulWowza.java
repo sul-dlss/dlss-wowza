@@ -227,9 +227,15 @@ public class SulWowza extends ModuleBase
             else
                 return false;
         }
+        catch (SocketTimeoutException e)
+        {
+            // the connect timeout expired before a connection was established, OR
+            // the read timeout expired before there was data available for read
+            getLogger().error(this.getClass().getSimpleName() + " unable to verify stacks token at " + verifyStacksTokenUrl + e);
+        }
         catch (IOException e)
         {
-            getLogger().error(this.getClass().getSimpleName() + " unable to verify stacks token at " + verifyStacksTokenUrl);
+            getLogger().error(this.getClass().getSimpleName() + " unable to verify stacks token at " + verifyStacksTokenUrl + e);
         }
         return false;
     }
