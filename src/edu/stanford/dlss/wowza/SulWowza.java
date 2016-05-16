@@ -20,13 +20,26 @@ public class SulWowza extends ModuleBase
 
     public static final String DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL = "http://localhost:3000";
     static String stacksTokenVerificationBaseUrl;
+    /** default setting for stacks service connection timeout (time to establish a connection), in seconds */
+    public static final int DEFAULT_STACKS_CONNECTION_TIMEOUT = 30;
+    static int stacksConnectionTimeout;
+    /** default setting for stacks service read timeout (time for reading stream after connection is established),
+     * in seconds */
+    public static final int DEFAULT_STACKS_READ_TIMEOUT = 30;
+    static int stacksReadTimeout;
 
     /** invoked when a Wowza application instance is started;
      * defined in the IModuleOnApp interface */
     public void onAppStart(IApplicationInstance appInstance)
     {
-        String stacksURL = appInstance.getProperties().getPropertyStr("stacksURL", DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL);
-        stacksTokenVerificationBaseUrl = stacksURL;
+        // TODO:  this approach expects the properties to be set in Application.xml
+        //   maybe that's good, or maybe we want to load a java properties file from our plugin jar itself?
+        stacksConnectionTimeout = appInstance.getProperties().getPropertyInt("stacksConnectionTimeout", DEFAULT_STACKS_CONNECTION_TIMEOUT);
+        getLogger().info(this.getClass().getSimpleName() + " stacks connection timeout is " + String.valueOf(stacksConnectionTimeout));
+        stacksReadTimeout = appInstance.getProperties().getPropertyInt("stacksReadTimeout", DEFAULT_STACKS_READ_TIMEOUT);
+        getLogger().info(this.getClass().getSimpleName() + " stacks read timeout is " + String.valueOf(stacksReadTimeout));
+
+        stacksTokenVerificationBaseUrl = appInstance.getProperties().getPropertyStr("stacksURL", DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL);;
         try
         {
             new URL(stacksTokenVerificationBaseUrl);
@@ -201,9 +214,12 @@ public class SulWowza extends ModuleBase
         try
         {
             URL tokenVerifyURL = new URL(verifyStacksTokenUrl);
-            URLConnection stacksConn = tokenVerifyURL.openConnection();
+            HttpURLConnection stacksConn = (HttpURLConnection) tokenVerifyURL.openConnection();
+            stacksConn.setRequestMethod("HEAD");
+            stacksConn.setConnectTimeout(stacksConnectionTimeout * 1000); // need milliseconds
+            stacksConn.setReadTimeout(stacksReadTimeout * 1000);  // need milliseconds
             stacksConn.connect();
-            int status = ((HttpURLConnection) stacksConn).getResponseCode();
+            int status = stacksConn.getResponseCode();
             getLogger().info(this.getClass().getSimpleName() + " sent verify_token request to " + verifyStacksTokenUrl);
             getLogger().debug(this.getClass().getSimpleName() + " verify_token response code is " + String.valueOf(status));
             if (status == HttpURLConnection.HTTP_OK)
