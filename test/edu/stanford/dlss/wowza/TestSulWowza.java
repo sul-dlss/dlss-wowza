@@ -29,6 +29,29 @@ public class TestSulWowza
     }
 
     @Test
+    public void onAppStart_validPropertyUrl()
+    {
+        String exampleUrl = "http://example.org";
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyStr("stacksURL", SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenReturn(exampleUrl);
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+        testModule.onAppStart(appInstanceMock);
+        assertEquals(exampleUrl, SulWowza.stacksTokenVerificationBaseUrl);
+    }
+
+    @Test
+    public void onAppStart_defaultUrl()
+    {
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyStr("stacksURL", SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenReturn(SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL);
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+        testModule.onAppStart(appInstanceMock);
+        assertEquals(SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL, SulWowza.stacksTokenVerificationBaseUrl);
+    }
+
+    @Test
     public void onAppStart_badUrl_logsError()
     {
         // logger is the rootLogger, per test/resources/log4j.properties
@@ -60,29 +83,6 @@ public class TestSulWowza
         {
             logger.removeAppender(appender);
         }
-    }
-
-    @Test
-    public void onAppStart_defaultUrl()
-    {
-        WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyStr("stacksURL", SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenReturn(SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL);
-        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
-        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
-        testModule.onAppStart(appInstanceMock);
-        assertEquals(SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL, SulWowza.stacksTokenVerificationBaseUrl);
-    }
-
-    @Test
-    public void onAppStart_validPropertyUrl()
-    {
-        String exampleUrl = "http://example.org";
-        WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyStr("stacksURL", SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenReturn(exampleUrl);
-        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
-        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
-        testModule.onAppStart(appInstanceMock);
-        assertEquals(exampleUrl, SulWowza.stacksTokenVerificationBaseUrl);
     }
 
     @Test
