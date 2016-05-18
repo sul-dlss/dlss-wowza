@@ -283,8 +283,8 @@ public class SulWowza extends ModuleBase
     URL getVerifyStacksTokenUrl(String stacksToken, String druid, String filename, String userIp)
     {
         // TODO:  Url encode anything?   utf-8 charset affect anything? (filename, stacksToken)
-        String queryStr = "stacks_token=" + stacksToken + "&user_ip=" + userIp;
-        String fullUrl = stacksTokenVerificationBaseUrl + "/media/" + druid + "/" + filename + "/verify_token?" + queryStr;
+        String queryStr = "stacks_token=" + urlEncode(stacksToken) + "&user_ip=" + urlEncode(userIp);
+        String fullUrl = stacksTokenVerificationBaseUrl + "/media/" + urlEncode(druid) + "/" + urlEncode(filename) + "/verify_token?" + queryStr;
         try
         {
             return new URL(fullUrl);
@@ -301,10 +301,7 @@ public class SulWowza extends ModuleBase
     {
         try
         {
-            HttpURLConnection stacksConn = (HttpURLConnection) verifyStacksTokenUrl.openConnection();
-            stacksConn.setRequestMethod("HEAD");
-            stacksConn.setConnectTimeout(stacksConnectionTimeout * 1000); // need milliseconds
-            stacksConn.setReadTimeout(stacksReadTimeout * 1000);  // need milliseconds
+            HttpURLConnection stacksConn = getStacksUrlConn(verifyStacksTokenUrl, "HEAD");
             stacksConn.connect();
             int status = stacksConn.getResponseCode();
             getLogger().info(this.getClass().getSimpleName() + " sent verify_token request to " + verifyStacksTokenUrl);
@@ -325,5 +322,28 @@ public class SulWowza extends ModuleBase
             getLogger().error(this.getClass().getSimpleName() + " unable to verify stacks token at " + verifyStacksTokenUrl + e);
         }
         return false;
+    }
+
+    HttpURLConnection getStacksUrlConn(URL stacksUrl, String requestMethod) throws IOException
+    {
+        HttpURLConnection stacksConn = (HttpURLConnection) stacksUrl.openConnection();
+        stacksConn.setRequestMethod(requestMethod);
+        stacksConn.setConnectTimeout(stacksConnectionTimeout * 1000); // need milliseconds
+        stacksConn.setReadTimeout(stacksReadTimeout * 1000);  // need milliseconds
+        return stacksConn;
+    }
+
+    static String urlEncode(String urlComponent)
+    {
+        try
+        {
+            // the javadocs say that encode without an explicitly specified encoding is deprecated
+            return URLEncoder.encode(urlComponent, java.nio.charset.StandardCharsets.UTF_8.toString());
+        }
+        catch (java.io.UnsupportedEncodingException e)
+        {
+            getLogger().error(SulWowza.class.getSimpleName() + " this should never happen, since we should be using the JDK UTF-8 constant: " + urlComponent + " ; " + e);
+            throw new RuntimeException(e);
+        }
     }
 }
