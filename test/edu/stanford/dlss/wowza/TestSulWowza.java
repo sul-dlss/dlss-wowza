@@ -157,7 +157,7 @@ public class TestSulWowza
     }
 
     @Test
-    public void onHTTPMPEGDashStreamingSessionCreate_calls_authorizeSession_ifValidConfiguration()
+    public void onHTTPCupertinoStreamingSessionCreate_calls_authorizeSession_ifValidConfiguration()
     {
         SulWowza spyModule = spy(testModule);
         HTTPStreamerSessionCupertino sessionMock = mock(HTTPStreamerSessionCupertino.class);
@@ -168,7 +168,7 @@ public class TestSulWowza
     }
 
     @Test
-    public void onHTTPMPEGDashStreamingSessionCreate_rejectsSession_ifInvalidConfiguration()
+    public void onHTTPCupertinoStreamingSessionCreate_rejectsSession_ifInvalidConfiguration()
     {
         testModule.invalidConfiguration = true;
         SulWowza spyModule = spy(testModule);
@@ -180,7 +180,7 @@ public class TestSulWowza
     }
 
     @Test
-    public void onHTTPCupertinoStreamingSessionCreate_calls_authorizeSession_ifValidConfiguration()
+    public void onHTTPMPEGDashStreamingSessionCreate_calls_authorizeSession_ifValidConfiguration()
     {
         SulWowza spyModule = spy(testModule);
         HTTPStreamerSessionMPEGDash sessionMock = mock(HTTPStreamerSessionMPEGDash.class);
@@ -191,7 +191,7 @@ public class TestSulWowza
     }
 
     @Test
-    public void onHTTPCupertinoStreamingSessionCreate_rejectsSession_ifInvalidConfiguration()
+    public void onHTTPMPEGDashStreamingSessionCreate_rejectsSession_ifInvalidConfiguration()
     {
         testModule.invalidConfiguration = true;
         SulWowza spyModule = spy(testModule);
