@@ -15,6 +15,8 @@ import com.wowza.wms.httpstreamer.model.IHTTPStreamerSession;
 import com.wowza.wms.httpstreamer.mpegdashstreaming.httpstreamer.HTTPStreamerSessionMPEGDash;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -469,9 +471,12 @@ public class TestSulWowza
             throws MalformedURLException
     {
         String expUrlStr = SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL + "/media///verify_token?stacks_token=&user_ip=";
+        URL expURL = new URL(expUrlStr);
         SulWowza spyModule = spy(testModule);
+        when(spyModule.getVerifyStacksTokenUrl(anyString(), anyString(), anyString(), anyString())).thenReturn(expURL);
+
         spyModule.verifyStacksToken(anyString(), anyString(), anyString(), anyString());
-        verify(spyModule).verifyTokenAgainstStacksService(new URL(expUrlStr));
+        verify(spyModule).verifyTokenAgainstStacksService(expURL);
     }
 
     @Test
@@ -714,7 +719,7 @@ public class TestSulWowza
     }
 
     @Test
-    public void verifyTokenAgainstStacksService_validUrl()
+    public void getVerifyStacksTokenUrl_validUrl()
     {
         WMSProperties mockProperties = mock(WMSProperties.class);
         when(mockProperties.getPropertyStr(anyString(), anyString())).thenReturn(SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL);
@@ -734,7 +739,7 @@ public class TestSulWowza
 
     @Test
     /** expect it to return null and log an error message */
-    public void verifyTokenAgainstStacksService_malformedUrl()
+    public void getVerifyStacksTokenUrl_malformedUrl()
     {
         WMSProperties mockProperties = mock(WMSProperties.class);
         when(mockProperties.getPropertyStr(anyString(), anyString())).thenReturn("badUrl");
@@ -765,16 +770,30 @@ public class TestSulWowza
         }
     }
 
-    //@Test
-    public void verifyTokenAgainstStacksService_wUrlString_logsRequestMade()
-            throws MalformedURLException
+    @Test
+    /** returns true and logs request made */
+    public void verifyTokenAgainstStacksService_getsStacksHttpURLConn()
+            throws IOException
     {
-        fail("don't know how to test this without spinning up a local stacks instance");
-
         String expPath = "/media/oo000oo0000/filename.ext/verify_token";
         String expQueryStr = "?stacks_token=" + stacksToken + "&user_ip=0.0.0.0";
         String urlStr = "http://localhost:3000" + expPath + expQueryStr;
-        URL url = new URL(urlStr);
+        URL stacksURL = new URL(urlStr);
+
+        SulWowza spyModule = spy(testModule);
+        spyModule.verifyTokenAgainstStacksService(stacksURL);
+        verify(spyModule).getStacksHttpURLConn(stacksURL, "HEAD");
+    }
+
+    @Test
+    /** returns true and logs request made */
+    public void verifyTokenAgainstStacksService_HTTP_OK()
+            throws IOException
+    {
+        String expPath = "/media/oo000oo0000/filename.ext/verify_token";
+        String expQueryStr = "?stacks_token=" + stacksToken + "&user_ip=0.0.0.0";
+        String urlStr = "http://localhost:3000" + expPath + expQueryStr;
+        URL stacksURL = new URL(urlStr);
 
         // logger is the rootLogger, per test/resources/log4j.properties
         Logger logger = Logger.getRootLogger();
@@ -785,12 +804,51 @@ public class TestSulWowza
 
         try
         {
-            boolean result = testModule.verifyTokenAgainstStacksService(url);
-            assertTrue(result);
+            SulWowza spyModule = spy(testModule);
+            HttpURLConnection mockStacksConn = mock(HttpURLConnection.class);
+            when(spyModule.getStacksHttpURLConn(stacksURL, "HEAD")).thenReturn(mockStacksConn);
+            when(mockStacksConn.getResponseCode()).thenReturn(HttpURLConnection.HTTP_OK);
+            assertTrue(spyModule.verifyTokenAgainstStacksService(stacksURL));
             String logMsg = out.toString();
             assertThat(logMsg, allOf(containsString("INFO"),
                                      containsString(testModule.getClass().getSimpleName()),
-                                     containsString("verify_token request made to"),
+                                     containsString("sent verify_token request to"),
+                                     containsString(urlStr)));
+        }
+        finally
+        {
+            logger.removeAppender(appender);
+        }
+    }
+
+    @Test
+    /** returns false and logs request made */
+    public void verifyTokenAgainstStacksService_HTTP_FORBIDDEN()
+            throws IOException
+    {
+        String expPath = "/media/oo000oo0000/filename.ext/verify_token";
+        String expQueryStr = "?stacks_token=" + stacksToken + "&user_ip=0.0.0.0";
+        String urlStr = "http://localhost:3000" + expPath + expQueryStr;
+        URL stacksURL = new URL(urlStr);
+
+        // logger is the rootLogger, per test/resources/log4j.properties
+        Logger logger = Logger.getRootLogger();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Layout layout = new SimpleLayout();
+        Appender appender = new WriterAppender(layout, out);
+        logger.addAppender(appender);
+
+        try
+        {
+            SulWowza spyModule = spy(testModule);
+            HttpURLConnection mockStacksConn = mock(HttpURLConnection.class);
+            when(spyModule.getStacksHttpURLConn(stacksURL, "HEAD")).thenReturn(mockStacksConn);
+            when(mockStacksConn.getResponseCode()).thenReturn(HttpURLConnection.HTTP_FORBIDDEN);
+            assertFalse(spyModule.verifyTokenAgainstStacksService(stacksURL));
+            String logMsg = out.toString();
+            assertThat(logMsg, allOf(containsString("INFO"),
+                                     containsString(testModule.getClass().getSimpleName()),
+                                     containsString("sent verify_token request to"),
                                      containsString(urlStr)));
         }
         finally
@@ -807,7 +865,7 @@ public class TestSulWowza
         String expPath = "/media/oo000oo0000/filename.ext/verify_token";
         String expQueryStr = "?stacks_token=" + stacksToken + "&user_ip=0.0.0.0";
         String urlStr = "http://localhost:6666" + expPath + expQueryStr;
-        URL url = new URL(urlStr);
+        URL stacksURL = new URL(urlStr);
 
         // logger is the rootLogger, per test/resources/log4j.properties
         Logger logger = Logger.getRootLogger();
@@ -818,7 +876,7 @@ public class TestSulWowza
 
         try
         {
-            boolean result = testModule.verifyTokenAgainstStacksService(url);
+            boolean result = testModule.verifyTokenAgainstStacksService(stacksURL);
             assertFalse(result);
             String logMsg = out.toString();
             assertThat(logMsg, allOf(containsString("ERROR"),
