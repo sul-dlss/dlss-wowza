@@ -15,8 +15,10 @@ import com.wowza.wms.httpstreamer.model.IHTTPStreamerSession;
 import com.wowza.wms.httpstreamer.mpegdashstreaming.httpstreamer.HTTPStreamerSessionMPEGDash;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.HttpURLConnection;
 
 public class TestSulWowza
 {
@@ -765,12 +767,10 @@ public class TestSulWowza
         }
     }
 
-    //@Test
+    @Test
     public void verifyTokenAgainstStacksService_wUrlString_logsRequestMade()
-            throws MalformedURLException
+            throws MalformedURLException, IOException
     {
-        fail("don't know how to test this without spinning up a local stacks instance");
-
         String expPath = "/media/oo000oo0000/filename.ext/verify_token";
         String expQueryStr = "?stacks_token=" + stacksToken + "&user_ip=0.0.0.0";
         String urlStr = "http://localhost:3000" + expPath + expQueryStr;
@@ -785,12 +785,18 @@ public class TestSulWowza
 
         try
         {
-            boolean result = testModule.verifyTokenAgainstStacksService(url);
+            HttpURLConnection mockStacksConn = mock(HttpURLConnection.class);
+            SulWowza spyModule = spy(testModule);
+            when(spyModule.getStacksUrlConn(url, "HEAD")).thenReturn(mockStacksConn);
+            when(mockStacksConn.getResponseCode()).thenReturn(200);
+            boolean result = spyModule.verifyTokenAgainstStacksService(url);
+
+            verify(mockStacksConn).connect();
             assertTrue(result);
             String logMsg = out.toString();
             assertThat(logMsg, allOf(containsString("INFO"),
                                      containsString(testModule.getClass().getSimpleName()),
-                                     containsString("verify_token request made to"),
+                                     containsString("sent verify_token request t"),
                                      containsString(urlStr)));
         }
         finally

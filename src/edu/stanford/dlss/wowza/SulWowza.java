@@ -301,10 +301,7 @@ public class SulWowza extends ModuleBase
     {
         try
         {
-            HttpURLConnection stacksConn = (HttpURLConnection) verifyStacksTokenUrl.openConnection();
-            stacksConn.setRequestMethod("HEAD");
-            stacksConn.setConnectTimeout(stacksConnectionTimeout * 1000); // need milliseconds
-            stacksConn.setReadTimeout(stacksReadTimeout * 1000);  // need milliseconds
+            HttpURLConnection stacksConn = getStacksUrlConn(verifyStacksTokenUrl, "HEAD");
             stacksConn.connect();
             int status = stacksConn.getResponseCode();
             getLogger().info(this.getClass().getSimpleName() + " sent verify_token request to " + verifyStacksTokenUrl);
@@ -325,5 +322,14 @@ public class SulWowza extends ModuleBase
             getLogger().error(this.getClass().getSimpleName() + " unable to verify stacks token at " + verifyStacksTokenUrl + e);
         }
         return false;
+    }
+
+    HttpURLConnection getStacksUrlConn(URL stacksUrl, String requestMethod) throws IOException
+    {
+        HttpURLConnection stacksConn = (HttpURLConnection) stacksUrl.openConnection();
+        stacksConn.setRequestMethod(requestMethod);
+        stacksConn.setConnectTimeout(stacksConnectionTimeout * 1000); // need milliseconds
+        stacksConn.setReadTimeout(stacksReadTimeout * 1000);  // need milliseconds
+        return stacksConn;
     }
 }
