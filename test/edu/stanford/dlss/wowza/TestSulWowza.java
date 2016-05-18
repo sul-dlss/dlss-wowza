@@ -735,6 +735,45 @@ public class TestSulWowza
     }
 
     @Test
+    public void verifyTokenAgainstStacksService_filenameNeedsEncoding()
+    {
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyStr(anyString(), anyString())).thenReturn(SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL);
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+        testModule.onAppStart(appInstanceMock);
+        String druid = "oo000oo0000";
+        String filename = "file name with spaces; and an unusual char @ then end.ext!";
+        String userIp = "0.0.0.0";
+        String expPath = "/media/" + druid + "/" + SulWowza.urlEncode(filename) + "/verify_token";
+        String expQueryStr = "?stacks_token=" + stacksToken + "&user_ip=" + userIp;
+        String expUrlStr = SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL + expPath + expQueryStr;
+
+        URL resultUrl = testModule.getVerifyStacksTokenUrl(stacksToken, druid, filename, userIp);
+        assertEquals(expUrlStr, resultUrl.toString());
+    }
+
+    @Test
+    public void verifyTokenAgainstStacksService_stacksTokenNeedsEncoding()
+    {
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyStr(anyString(), anyString())).thenReturn(SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL);
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+        testModule.onAppStart(appInstanceMock);
+        String druid = "oo000oo0000";
+        String filename = "filename.ext";
+        String userIp = "0.0.0.0";
+        String expPath = "/media/" + druid + "/" + filename + "/verify_token";
+        String stacksTokenWithWeirdChars = "ü!@#$%^&--*()~`=+%20_";
+        String expQueryStr = "?stacks_token=" + SulWowza.urlEncode(stacksTokenWithWeirdChars) + "&user_ip=" + userIp;
+        String expUrlStr = SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL + expPath + expQueryStr;
+
+        URL resultUrl = testModule.getVerifyStacksTokenUrl(stacksTokenWithWeirdChars, druid, filename, userIp);
+        assertEquals(expUrlStr, resultUrl.toString());
+    }
+
+    @Test
     /** expect it to return null and log an error message */
     public void verifyTokenAgainstStacksService_malformedUrl()
     {
