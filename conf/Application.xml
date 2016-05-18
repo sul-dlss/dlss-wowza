@@ -204,8 +204,20 @@
 		<!-- Properties defined here will be added to the IApplication.getProperties() and IApplicationInstance.getProperties() collections -->
 		<Properties>
 			<Property>
+			    <!-- baseUrl for service verifying stacks_token for authorization -->
             	<Name>stacksURL</Name>
-                <Value>https://stacks-test.stanford.edu/verify</Value>
+                <Value>https://stacks-test.stanford.edu</Value>
+            </Property>
+            <Property>
+                <!-- stacks service connection timeout (time to establish a connection), in seconds; default is 30 -->
+                <Name>stacksConnectionTimeout</Name>
+                <Value>20</Value>
+            </Property>
+            <Property>
+                <!-- stacks service connection timeout (time for reading stream after connection is established), 
+                    in seconds; default is 30 -->
+                <Name>stacksReadTimeout</Name>
+                <Value>20</Value>
             </Property>
 		</Properties>
 	</Application>
