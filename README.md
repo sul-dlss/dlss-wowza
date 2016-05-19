@@ -60,13 +60,24 @@ Alternatively, you can manually edit Application.xml and then reload the Wowza a
   </Property>
 ```
 
-### To deploy plugin code to VM:
+### To deploy a new version of the plugin code to the VM:
 
-- (ensure Wowza application on VM has the properties above)
-- (update version file)
-- (tag version on github)
-- (trigger jenkins build that creates versioned deployment jar artifact)
-- (update puppet script to use latest version)
+- Configuring a Wowza application to use the plugin is described above, and can happen independently of the plugin Jar deployment.
+- Release a new (tagged) version of the plugin:
+  - Update `conf/version`.  This should be just the version number itself, e.g. `1.7.1` or `2.0.0-beta`.
+  - Create a version tag and release notes:
+    - Create a Github release for the tag with brief notes about changes since the last release.  Note:  when you publish a release in Github, the tag will be created for you if it doesn't exist already.
+      - The git tag's version number should use the `v` prefix, e.g. `v1.7.1` or `v2.0.0-beta` (corresponding with the `conf/version` example).
+    - In order to use the `deploymentJar` gradle task (a la Jenkins), the git tag (e.g `v1.7.1`) must match the contents of `conf/version` (e.g. `1.7.1`) other than the leading v, present only in the git tag.
+  - Note: if you do choose to tag from the command line, don't forget to push tags to Github.
+- Trigger the Jenkins build (`wowza-auth-plugin`) that creates the versioned .jar artifact for deployment.
+  - Log into Jenkins, navigate to the 'wowza-auth-plugin' project, and invoke the 'Build Now' command.
+  - Note: 
+    - the Jenkins build is configured to use the master branch;  the jar will have the code from the last commit to the master branch.
+    - the jar created will be copied to an artifacts directory on jenkins, from which puppet will get the versioned jar.
+    - TODO:  build the jar from the tagged branch indicated in conf/version (see issue #23)
+- Update puppet to deploy the specific versioned artifact to the desired VM. 
+  - make a PR in puppet to do this, following puppet practices.  (or ask your friendly devops rep to help)
 
 ### To deploy locally (e.g. on dev laptop)
 
@@ -74,8 +85,8 @@ Alternatively, you can manually edit Application.xml and then reload the Wowza a
 - create Wowza application instance
 - ensure Wowza application instance has properties above
   - example Application.xml file  at  conf/example/Application.xml
-- build the jar using gradlew
-- deploy jar to /your/wowza/lib
+- build the jar using `./gradlew deploymentJar` or `./gradlew deploymentJarRelaxed`  (the latter is needed if `conf/version` doesn't match the head commit in the current branch)
+- copy jar to /your/wowza/lib
 - start up Wowza
 
 ### To see Gradle tasks
@@ -87,7 +98,7 @@ Alternatively, you can manually edit Application.xml and then reload the Wowza a
   ./gradlew --help
 
 
-## (below to be removed from README??)
+## Deprecated build instructions (possibly useful for troubleshooting, eventually remove?)
 
 ### To manually compile
 

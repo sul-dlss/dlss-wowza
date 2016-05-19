@@ -2,9 +2,37 @@ plugins {
     id 'java'
     id 'jacoco'
     id 'com.github.kt3k.coveralls' version '2.6.3'
+    id 'org.ajoberstar.grgit' version '1.4.2'
 }
 
-version = '0.0.1'
+import org.ajoberstar.grgit.Grgit
+def grgit = Grgit.open(project.rootDir)
+
+String readVersionFile() {
+    return new File('conf/version').text.trim()
+}
+
+boolean deployVersionMatchesGitTag(deployVersion, gitTag) {
+    return "v${deployVersion}" == gitTag
+}
+
+String buildArtifactVersionString(deployVersion, gitTag, gitRevisionHash) {
+    // the convention is that the git tag starts with "v", but the number in the file is just the number
+    return deployVersionMatchesGitTag(deployVersion, gitTag) ? gitTag : "v${deployVersion}-untagged-${gitRevisionHash}"
+}
+
+ext {
+    gitTag = grgit.describe()
+    gitRevisionHash = grgit.head().id
+    gitRevisionHashShort = grgit.head().getAbbreviatedId()
+    gitCommitMessage = grgit.head().shortMessage
+    gitCommitMessageFull = grgit.head().fullMessage
+    deployVersion = readVersionFile()
+    artifactVersionString = buildArtifactVersionString(deployVersion, gitTag, gitRevisionHashShort)
+}
+
+version = artifactVersionString
+
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
@@ -46,3 +74,23 @@ jacocoTestReport {
 }
 
 check.dependsOn jacocoTestReport
+
+// for an intro to writing gradle tasks:  https://docs.gradle.org/current/userguide/tutorial_using_tasks.html
+
+task deploymentJarRelaxed(type: Jar) {
+    manifest {
+        attributes("gitTag": "${gitTag}",
+                 "gitRevisionHash": "${gitRevisionHash}",
+                 "deployVersion": "${deployVersion}",
+                 "artifactVersionString": "${artifactVersionString}")
+    }
+    with jar
+}
+
+task deploymentJar(type: Jar) {
+    doFirst {
+        assert deployVersionMatchesGitTag(deployVersion, gitTag) :
+            "deployVersion must match current git tag (or invoke deploymentJarRelaxed instead). deployVersion=${deployVersion} gitTag=${gitTag}"
+    }
+    with deploymentJarRelaxed
+}
