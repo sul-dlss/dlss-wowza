@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TestSulWowza
 {
@@ -314,8 +316,10 @@ public class TestSulWowza
         String druid = "oo000oo0000";
         String userIp = "ignored";
         IHTTPStreamerSession sessionMock = mock(IHTTPStreamerSession.class);
+        Map<String, String> mockHttpHeaderMap = new HashMap<String, String>();
+        mockHttpHeaderMap.put("x-forwarded-for", userIp);
+        when(sessionMock.getHTTPHeaderMap()).thenReturn(mockHttpHeaderMap);
         when(sessionMock.getQueryStr()).thenReturn(queryStr);
-        when(sessionMock.getIpAddress()).thenReturn(userIp);
         when(sessionMock.getStreamName()).thenReturn(streamName);
         SulWowza spyModule = spy(testModule);
         when(spyModule.verifyStacksToken(stacksToken, druid, filename, userIp)).thenReturn(true);
@@ -332,8 +336,10 @@ public class TestSulWowza
         String druid = "oo000oo0000";
         String userIp = "ignored";
         IHTTPStreamerSession sessionMock = mock(IHTTPStreamerSession.class);
+        Map<String, String> mockHttpHeaderMap = new HashMap<String, String>();
+        mockHttpHeaderMap.put("x-forwarded-for", userIp);
+        when(sessionMock.getHTTPHeaderMap()).thenReturn(mockHttpHeaderMap);
         when(sessionMock.getQueryStr()).thenReturn(queryStr);
-        when(sessionMock.getIpAddress()).thenReturn(userIp);
         when(sessionMock.getStreamName()).thenReturn(streamName);
         SulWowza spyModule = spy(testModule);
         when(spyModule.verifyStacksToken(stacksToken, druid, filename, userIp)).thenReturn(false);
@@ -367,19 +373,25 @@ public class TestSulWowza
     public void authorizeSession_getsUserIp()
     {
         IHTTPStreamerSession sessionMock = mock(IHTTPStreamerSession.class);
+        Map<String, String> mockHttpHeaderMap = new HashMap<String, String>();
+        Map<String, String> spyHttpHeaderMap = spy(mockHttpHeaderMap);
+        when(sessionMock.getHTTPHeaderMap()).thenReturn(spyHttpHeaderMap);
         SulWowza spyModule = spy(testModule);
 
         spyModule.authorizeSession(sessionMock);
-        verify(sessionMock).getIpAddress();
+        verify(sessionMock).getHTTPHeaderMap();
+        verify(spyHttpHeaderMap).get("x-forwarded-for");
     }
 
     @Test
     public void authorizeSession_validatesUserIp()
     {
-        String ipAddr = "anIpAddr";
+        String ipAddr = "userIpAddr";
         IHTTPStreamerSession sessionMock = mock(IHTTPStreamerSession.class);
+        Map<String, String> mockHttpHeaderMap = new HashMap<String, String>();
+        mockHttpHeaderMap.put("x-forwarded-for", ipAddr);
+        when(sessionMock.getHTTPHeaderMap()).thenReturn(mockHttpHeaderMap);
         when(sessionMock.getQueryStr()).thenReturn(queryStr);
-        when(sessionMock.getIpAddress()).thenReturn(ipAddr);
         SulWowza spyModule = spy(testModule);
 
         spyModule.authorizeSession(sessionMock);
@@ -392,7 +404,9 @@ public class TestSulWowza
         String streamName = "anything";
         IHTTPStreamerSession sessionMock = mock(IHTTPStreamerSession.class);
         when(sessionMock.getQueryStr()).thenReturn(queryStr);
-        when(sessionMock.getIpAddress()).thenReturn("ignored");
+        Map<String, String> mockHttpHeaderMap = new HashMap<String, String>();
+        mockHttpHeaderMap.put("x-forwarded-for", "127.6.6.6");  // userIp
+        when(sessionMock.getHTTPHeaderMap()).thenReturn(mockHttpHeaderMap);
         when(sessionMock.getStreamName()).thenReturn(streamName);
         SulWowza spyModule = spy(testModule);
 
@@ -405,8 +419,10 @@ public class TestSulWowza
     {
         String streamName = "aa/123/bb/1234/e";
         IHTTPStreamerSession sessionMock = mock(IHTTPStreamerSession.class);
+        Map<String, String> mockHttpHeaderMap = new HashMap<String, String>();
+        mockHttpHeaderMap.put("x-forwarded-for", "127.6.6.6"); // userIp
+        when(sessionMock.getHTTPHeaderMap()).thenReturn(mockHttpHeaderMap);
         when(sessionMock.getQueryStr()).thenReturn(queryStr);
-        when(sessionMock.getIpAddress()).thenReturn("anIpAddr");
         when(sessionMock.getStreamName()).thenReturn(streamName);
         SulWowza spyModule = spy(testModule);
 
@@ -433,8 +449,10 @@ public class TestSulWowza
     {
         String streamName = "aa/123/bb/1234/filename.ext";
         IHTTPStreamerSession sessionMock = mock(IHTTPStreamerSession.class);
+        Map<String, String> mockHttpHeaderMap = new HashMap<String, String>();
+        mockHttpHeaderMap.put("x-forwarded-for", "127.6.6.6"); // userIp
+        when(sessionMock.getHTTPHeaderMap()).thenReturn(mockHttpHeaderMap);
         when(sessionMock.getQueryStr()).thenReturn(queryStr);
-        when(sessionMock.getIpAddress()).thenReturn("anIpAddr");
         when(sessionMock.getStreamName()).thenReturn(streamName);
         SulWowza spyModule = spy(testModule);
 
