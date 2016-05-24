@@ -40,7 +40,7 @@ public class SulWowza extends ModuleBase
         catch (MalformedURLException e)
         {
             invalidConfiguration = true;
-            getLogger().error(this.getClass().getSimpleName() + " unable to initialize module due to bad stacksURL: ", e);
+            getLogger().error(this.getClass().getSimpleName() + " unable to initialize module due to bad stacksURL ", e);
         }
     }
 
@@ -99,7 +99,7 @@ public class SulWowza extends ModuleBase
         catch (Exception e)
         {
             getLogger().info(this.getClass().getSimpleName() +
-                            " unable to read stacksConnectionTimeout from properties; using default: " + e);
+                            " unable to read stacksConnectionTimeout from properties; using default ", e);
             stacksConnectionTimeout = DEFAULT_STACKS_CONNECTION_TIMEOUT;
         }
         getLogger().info(this.getClass().getSimpleName() + " stacksConnectionTimeout is " + String.valueOf(stacksConnectionTimeout));
@@ -124,7 +124,7 @@ public class SulWowza extends ModuleBase
         catch (Exception e)
         {
             getLogger().info(this.getClass().getSimpleName() +
-                            " unable to read stacksReadTimeout from properties; using default: " + e);
+                            " unable to read stacksReadTimeout from properties; using default ", e);
             stacksReadTimeout = DEFAULT_STACKS_READ_TIMEOUT;
         }
         getLogger().info(this.getClass().getSimpleName() + " stacksReadTimeout is " + String.valueOf(stacksReadTimeout));
@@ -143,7 +143,7 @@ public class SulWowza extends ModuleBase
         }
         catch (Exception e)
         {
-            getLogger().info(this.getClass().getSimpleName() + " unable to read stacksURL from properties: " + e);
+            getLogger().info(this.getClass().getSimpleName() + " unable to read stacksURL from properties ", e);
             return "";
         }
     }
@@ -289,9 +289,9 @@ public class SulWowza extends ModuleBase
         {
             return new URL(fullUrl);
         }
-        catch (MalformedURLException err)
+        catch (MalformedURLException e)
         {
-            getLogger().error(this.getClass().getSimpleName() + " bad URL for stacks_token verification: ", err);
+            getLogger().error(this.getClass().getSimpleName() + " bad URL for stacks_token verification: ", e);
             return null;
         }
     }
@@ -315,11 +315,11 @@ public class SulWowza extends ModuleBase
         {
             // the connect timeout expired before a connection was established, OR
             // the read timeout expired before there was data available for read
-            getLogger().error(this.getClass().getSimpleName() + " unable to verify stacks token at " + verifyStacksTokenUrl + e);
+            getLogger().error(this.getClass().getSimpleName() + " unable to verify stacks token at " + verifyStacksTokenUrl + " ", e);
         }
         catch (IOException e)
         {
-            getLogger().error(this.getClass().getSimpleName() + " unable to verify stacks token at " + verifyStacksTokenUrl + e);
+            getLogger().error(this.getClass().getSimpleName() + " unable to verify stacks token at " + verifyStacksTokenUrl + " ", e);
         }
         return false;
     }
