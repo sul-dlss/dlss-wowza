@@ -152,7 +152,7 @@ public class SulWowza extends ModuleBase
     {
         String queryStr = httpSession.getQueryStr();
         String stacksToken = getStacksToken(queryStr);
-        String userIp = httpSession.getIpAddress();
+        String userIp = httpSession.getHTTPHeaderMap().get("x-forwarded-for");
         getLogger().debug(this.getClass().getSimpleName() + " userIp: " + userIp);
         String streamName = httpSession.getStreamName();
         getLogger().debug(this.getClass().getSimpleName() + " streamName: " + streamName);
