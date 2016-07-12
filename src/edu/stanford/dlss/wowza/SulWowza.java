@@ -58,7 +58,6 @@ public class SulWowza extends ModuleBase
         {
             getLogger().info(this.getClass().getSimpleName() + " onHTTPMPEGDashStreamingSessionCreate: " + httpSession.getStreamName());
             authorizeSession(httpSession);
-            httpSession.setUserHTTPHeader("Access-Control-Allow-Origin", httpSession.getHTTPHeader("https://embed.stanford.edu"));
         }
     }
 
