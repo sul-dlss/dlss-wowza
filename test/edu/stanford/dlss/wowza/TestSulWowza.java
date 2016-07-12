@@ -314,7 +314,7 @@ public class TestSulWowza
         String filename = "ignored";
         String streamName = "oo/000/oo/0000/" + filename;
         String druid = "oo000oo0000";
-        String userIp = "ignored";
+        String userIp = "1.1.1.1";
         IHTTPStreamerSession sessionMock = mock(IHTTPStreamerSession.class);
         Map<String, String> mockHttpHeaderMap = new HashMap<String, String>();
         mockHttpHeaderMap.put("x-forwarded-for", userIp);

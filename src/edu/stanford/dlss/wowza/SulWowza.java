@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.commons.validator.routines.InetAddressValidator;
 import com.wowza.wms.application.IApplicationInstance;
 import com.wowza.wms.httpstreamer.cupertinostreaming.httpstreamer.HTTPStreamerSessionCupertino;
 import com.wowza.wms.httpstreamer.model.IHTTPStreamerSession;
@@ -210,12 +211,23 @@ public class SulWowza extends ModuleBase
         }
     }
 
-    private static final int MIN_IP_LENGTH = "1.1.1.1".length();
+    boolean isValidInetAddr(String inetAddress)
+    {
+        return InetAddressValidator.getInstance().isValid(inetAddress);
+    }
+
+    /** it's possible for something like "1.1" or "1" to be a valid IP address, but we want a full four octet address.
+      * this implicitly restricts us to IPv4 for now, though that seems like a safe assumption at the moment.
+      * see also: http://docs.oracle.com/javase/6/docs/api/java/net/Inet4Address.html#format
+     */
+    boolean isDottedQuadString(String ipAddr)
+    {
+        return ipAddr.matches("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
+    }
 
     boolean validateUserIp(String userIp)
     {
-        // could validate it's an IP address format, but since we obtain it from http session, we trust it
-        if (userIp != null && userIp.length() >= MIN_IP_LENGTH)
+        if (userIp != null && isValidInetAddr(userIp) && isDottedQuadString(userIp))
             return true;
         else
         {
