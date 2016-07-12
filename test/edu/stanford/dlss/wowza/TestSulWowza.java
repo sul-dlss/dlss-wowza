@@ -317,7 +317,8 @@ public class TestSulWowza
         String userIp = "1.1.1.1";
         IHTTPStreamerSession sessionMock = mock(IHTTPStreamerSession.class);
         Map<String, String> mockHttpHeaderMap = new HashMap<String, String>();
-        mockHttpHeaderMap.put("x-forwarded-for", userIp);
+        String xForwardedFor = "1.1.1.1, 2.2.2.2, 3.3.3.3";
+        mockHttpHeaderMap.put("x-forwarded-for", xForwardedFor);
         when(sessionMock.getHTTPHeaderMap()).thenReturn(mockHttpHeaderMap);
         when(sessionMock.getQueryStr()).thenReturn(queryStr);
         when(sessionMock.getStreamName()).thenReturn(streamName);
