@@ -626,9 +626,9 @@ public class TestSulWowza
     }
 
     @Test
-    public void validateUserIp_shortString()
+    public void validateUserIp_tooFewOctets()
     {
-        assertFalse(testModule.validateUserIp("short"));
+        assertFalse(testModule.validateUserIp("1.1.1"));
     }
 
     @Test
@@ -643,13 +643,13 @@ public class TestSulWowza
 
         try
         {
-            String shortIp = "short";
-            testModule.validateUserIp(shortIp);
+            String invalidIp = "invalid.ip";
+            testModule.validateUserIp(invalidIp);
             String logMsg = out.toString();
             assertThat(logMsg, allOf(containsString("ERROR"),
                                      containsString(testModule.getClass().getSimpleName()),
-                                     containsString("User IP missing or implausibly short"),
-                                     containsString(shortIp)));
+                                     containsString("User IP missing or invalid"),
+                                     containsString(invalidIp)));
         }
         finally
         {

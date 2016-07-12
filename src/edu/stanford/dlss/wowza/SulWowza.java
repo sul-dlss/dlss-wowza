@@ -231,7 +231,7 @@ public class SulWowza extends ModuleBase
             return true;
         else
         {
-            getLogger().error(this.getClass().getSimpleName() + ": User IP missing or implausibly short" +
+            getLogger().error(this.getClass().getSimpleName() + ": User IP missing or invalid" +
                                 (userIp == null ? "" : ": " + userIp));
             return false;
         }
