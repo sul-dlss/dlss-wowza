@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.apache.http.NameValuePair;
@@ -149,11 +150,28 @@ public class SulWowza extends ModuleBase
         }
     }
 
+    // the user's actual IP address will be the first entry in a comma-separated list
+    // of IP addresses in the "x-forwarded-for" header (as there might be proxies between
+    // the user and wowza).
+    // returns an empty string if it can't parse out an IP address.
+    String getUserIp(Map<String,String> httpReqHeaders)
+    {
+        String xForwardedFor = httpReqHeaders.get("x-forwarded-for");
+        getLogger().debug(this.getClass().getSimpleName() + " x-forwarded-for: " + xForwardedFor);
+
+        // nothing in the header field to parse, return empty string
+        if(xForwardedFor == null || xForwardedFor.length() == 0)
+            return "";
+
+        String[] userIpArr = xForwardedFor.split(",");
+        return userIpArr[0].trim();
+    }
+
     void authorizeSession(IHTTPStreamerSession httpSession)
     {
         String queryStr = httpSession.getQueryStr();
         String stacksToken = getStacksToken(queryStr);
-        String userIp = httpSession.getHTTPHeaderMap().get("x-forwarded-for");
+        String userIp = getUserIp(httpSession.getHTTPHeaderMap());
         getLogger().debug(this.getClass().getSimpleName() + " userIp: " + userIp);
         String streamName = httpSession.getStreamName();
         getLogger().debug(this.getClass().getSimpleName() + " streamName: " + streamName);
