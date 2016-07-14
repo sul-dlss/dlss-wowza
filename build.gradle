@@ -5,6 +5,10 @@ plugins {
     id 'org.ajoberstar.grgit' version '1.4.2'
 }
 
+dependencies {
+    compile group: 'commons-validator', name: 'commons-validator', version: '1.5.1'
+}
+
 import org.ajoberstar.grgit.Grgit
 def grgit = Grgit.open(project.rootDir)
 

@@ -314,10 +314,11 @@ public class TestSulWowza
         String filename = "ignored";
         String streamName = "oo/000/oo/0000/" + filename;
         String druid = "oo000oo0000";
-        String userIp = "ignored";
+        String userIp = "1.1.1.1";
         IHTTPStreamerSession sessionMock = mock(IHTTPStreamerSession.class);
         Map<String, String> mockHttpHeaderMap = new HashMap<String, String>();
-        mockHttpHeaderMap.put("x-forwarded-for", userIp);
+        String xForwardedFor = "1.1.1.1, 2.2.2.2, 3.3.3.3";
+        mockHttpHeaderMap.put("x-forwarded-for", xForwardedFor);
         when(sessionMock.getHTTPHeaderMap()).thenReturn(mockHttpHeaderMap);
         when(sessionMock.getQueryStr()).thenReturn(queryStr);
         when(sessionMock.getStreamName()).thenReturn(streamName);
@@ -626,9 +627,9 @@ public class TestSulWowza
     }
 
     @Test
-    public void validateUserIp_shortString()
+    public void validateUserIp_tooFewOctets()
     {
-        assertFalse(testModule.validateUserIp("short"));
+        assertFalse(testModule.validateUserIp("1.1.1"));
     }
 
     @Test
@@ -643,13 +644,13 @@ public class TestSulWowza
 
         try
         {
-            String shortIp = "short";
-            testModule.validateUserIp(shortIp);
+            String invalidIp = "invalid.ip";
+            testModule.validateUserIp(invalidIp);
             String logMsg = out.toString();
             assertThat(logMsg, allOf(containsString("ERROR"),
                                      containsString(testModule.getClass().getSimpleName()),
-                                     containsString("User IP missing or implausibly short"),
-                                     containsString(shortIp)));
+                                     containsString("User IP missing or invalid"),
+                                     containsString(invalidIp)));
         }
         finally
         {

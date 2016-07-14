@@ -4,10 +4,12 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.commons.validator.routines.InetAddressValidator;
 import com.wowza.wms.application.IApplicationInstance;
 import com.wowza.wms.httpstreamer.cupertinostreaming.httpstreamer.HTTPStreamerSessionCupertino;
 import com.wowza.wms.httpstreamer.model.IHTTPStreamerSession;
@@ -148,11 +150,28 @@ public class SulWowza extends ModuleBase
         }
     }
 
+    // the user's actual IP address will be the first entry in a comma-separated list
+    // of IP addresses in the "x-forwarded-for" header (as there might be proxies between
+    // the user and wowza).
+    // returns an empty string if it can't parse out an IP address.
+    String getUserIp(Map<String,String> httpReqHeaders)
+    {
+        String xForwardedFor = httpReqHeaders.get("x-forwarded-for");
+        getLogger().debug(this.getClass().getSimpleName() + " x-forwarded-for: " + xForwardedFor);
+
+        // nothing in the header field to parse, return empty string
+        if(xForwardedFor == null || xForwardedFor.length() == 0)
+            return "";
+
+        String[] userIpArr = xForwardedFor.split(",");
+        return userIpArr[0].trim();
+    }
+
     void authorizeSession(IHTTPStreamerSession httpSession)
     {
         String queryStr = httpSession.getQueryStr();
         String stacksToken = getStacksToken(queryStr);
-        String userIp = httpSession.getHTTPHeaderMap().get("x-forwarded-for");
+        String userIp = getUserIp(httpSession.getHTTPHeaderMap());
         getLogger().debug(this.getClass().getSimpleName() + " userIp: " + userIp);
         String streamName = httpSession.getStreamName();
         getLogger().debug(this.getClass().getSimpleName() + " streamName: " + streamName);
@@ -210,16 +229,27 @@ public class SulWowza extends ModuleBase
         }
     }
 
-    private static final int MIN_IP_LENGTH = "1.1.1.1".length();
+    boolean isValidInetAddr(String inetAddress)
+    {
+        return InetAddressValidator.getInstance().isValid(inetAddress);
+    }
+
+    /** it's possible for something like "1.1" or "1" to be a valid IP address, but we want a full four octet address.
+      * this implicitly restricts us to IPv4 for now, though that seems like a safe assumption at the moment.
+      * see also: http://docs.oracle.com/javase/6/docs/api/java/net/Inet4Address.html#format
+     */
+    boolean isDottedQuadString(String ipAddr)
+    {
+        return ipAddr.matches("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
+    }
 
     boolean validateUserIp(String userIp)
     {
-        // could validate it's an IP address format, but since we obtain it from http session, we trust it
-        if (userIp != null && userIp.length() >= MIN_IP_LENGTH)
+        if (userIp != null && isValidInetAddr(userIp) && isDottedQuadString(userIp))
             return true;
         else
         {
-            getLogger().error(this.getClass().getSimpleName() + ": User IP missing or implausibly short" +
+            getLogger().error(this.getClass().getSimpleName() + ": User IP missing or invalid" +
                                 (userIp == null ? "" : ": " + userIp));
             return false;
         }
