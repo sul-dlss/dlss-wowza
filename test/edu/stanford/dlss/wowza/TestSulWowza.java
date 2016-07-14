@@ -765,9 +765,11 @@ public class TestSulWowza
         when(appInstanceMock.getProperties()).thenReturn(mockProperties);
         testModule.onAppStart(appInstanceMock);
         String druid = "oo000oo0000";
-        String filename = "{([special-chars])}: ü@?;=&#$%20^*.|-_+!,~'\"`";
+        String filename = "{([special-chars])}: ü@?;=&#$%20^*.|-_+!,~'/\"`";
         String userIp = "0.0.0.0";
-        String expPath = "/media/" + druid + "/" + SulWowza.urlEncode(filename) + "/verify_token";
+        // specifically list the expected encodings, as we've run into trouble with encoding methods that were encoding in unexpected ways
+        String encodedFilename = "%7B%28%5Bspecial-chars%5D%29%7D%3A%20%C3%BC%40%3F%3B%3D%26%23%24%2520%5E%2A.%7C-_%2B%21%2C~%27%2F%22%60";
+        String expPath = "/media/" + druid + "/" + encodedFilename + "/verify_token";
         String expQueryStr = "?stacks_token=" + stacksToken + "&user_ip=" + userIp;
         String expUrlStr = SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL + expPath + expQueryStr;
 
@@ -787,8 +789,10 @@ public class TestSulWowza
         String filename = "filename.ext";
         String userIp = "0.0.0.0";
         String expPath = "/media/" + druid + "/" + filename + "/verify_token";
-        String stacksTokenWithWeirdChars = "{([special-chars])}: ü@?;=&#$%20^*.|-_+!,~'\"`";
-        String expQueryStr = "?stacks_token=" + SulWowza.urlEncode(stacksTokenWithWeirdChars) + "&user_ip=" + userIp;
+        String stacksTokenWithWeirdChars = "{([special-chars])}: ü@?;=&#$%20^*.|-_+!,~'/\"`";
+        // specifically list the expected encodings, as we've run into trouble with encoding methods that were encoding in unexpected ways
+        String encodedToken = "%7B%28%5Bspecial-chars%5D%29%7D%3A+%C3%BC%40%3F%3B%3D%26%23%24%2520%5E%2A.%7C-_%2B%21%2C~%27%2F%22%60";
+        String expQueryStr = "?stacks_token=" + encodedToken + "&user_ip=" + userIp;
         String expUrlStr = SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL + expPath + expQueryStr;
 
         URL resultUrl = testModule.getVerifyStacksTokenUrl(stacksTokenWithWeirdChars, druid, filename, userIp);
