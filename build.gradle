@@ -6,8 +6,8 @@ plugins {
 }
 
 dependencies {
-    compile group: 'commons-validator', name: 'commons-validator', version: '1.5.1'
-    compile group: 'com.google.guava', name: 'guava', version: '19.0'
+    compile group: 'commons-validator', name: 'commons-validator', version: '1.5.1' // IP address validation
+    compile group: 'com.google.guava', name: 'guava', version: '19.0' // URL escaping
 }
 
 import org.ajoberstar.grgit.Grgit

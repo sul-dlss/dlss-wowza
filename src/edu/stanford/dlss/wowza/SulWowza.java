@@ -314,7 +314,6 @@ public class SulWowza extends ModuleBase
     /** Assumption: stacksToken, druid, userIp and filename are all reasonable values (non-null, not empty, etc.) */
     URL getVerifyStacksTokenUrl(String stacksToken, String druid, String filename, String userIp)
     {
-        // TODO:  Url encode anything?   utf-8 charset affect anything? (filename, stacksToken)
         String queryStr = "stacks_token=" + escapeFormParam(stacksToken) + "&user_ip=" + escapeFormParam(userIp);
         String fullUrl = stacksTokenVerificationBaseUrl + "/media/" +
                         escapePathSegment(druid) + "/" + escapePathSegment(filename) +
