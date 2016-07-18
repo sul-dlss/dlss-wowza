@@ -10,6 +10,8 @@ import java.util.regex.Pattern;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.commons.validator.routines.InetAddressValidator;
+import com.google.common.escape.Escaper;
+import com.google.common.net.PercentEscaper;
 import com.wowza.wms.application.IApplicationInstance;
 import com.wowza.wms.httpstreamer.cupertinostreaming.httpstreamer.HTTPStreamerSessionCupertino;
 import com.wowza.wms.httpstreamer.model.IHTTPStreamerSession;
@@ -313,8 +315,11 @@ public class SulWowza extends ModuleBase
     URL getVerifyStacksTokenUrl(String stacksToken, String druid, String filename, String userIp)
     {
         // TODO:  Url encode anything?   utf-8 charset affect anything? (filename, stacksToken)
-        String queryStr = "stacks_token=" + urlEncode(stacksToken) + "&user_ip=" + urlEncode(userIp);
-        String fullUrl = stacksTokenVerificationBaseUrl + "/media/" + urlEncode(druid) + "/" + urlEncode(filename) + "/verify_token?" + queryStr;
+        String queryStr = "stacks_token=" + escapeFormParam(stacksToken) + "&user_ip=" + escapeFormParam(userIp);
+        String fullUrl = stacksTokenVerificationBaseUrl + "/media/" +
+                        escapePathSegment(druid) + "/" + escapePathSegment(filename) +
+                        "/verify_token?" + queryStr;
+
         try
         {
             return new URL(fullUrl);
@@ -364,16 +369,56 @@ public class SulWowza extends ModuleBase
         return stacksConn;
     }
 
-    static String urlEncode(String urlComponent)
+    /** We define these escape methods, because the most obvious method to use (URLEncoder.encode) works fine
+     * for form parameters, but does the wrong thing for URL path segments (a space should be encoded as "+" in
+     * form params, but as "%20" in path segments).  Additionally, it was rather difficult finding a Java method
+     * that does the right thing for encoding path segments:  some java.net.URI constructors take a path, but not
+     * individual path segments, which restricts the ability to use something like a slash, since a method encoding
+     * a whole path string will necessarily avoid touching slashes; Google's Guava provide's UrlEscapers, but the
+     * urlPathSegmentEscaper() allows too large a set of characters to remain unencoded, compared to what the RFC says
+     * is reserved; etc.  However, Guava's UrlEscapers are a light wrapper on its more configurable PercentEscaper,
+     * and that works just fine when passed the characters to omit from escaping (which is a short list), and a flag
+     * indicating whether to encode a space as "+" or "%20".
+     * See https://www.w3.org/TR/html401/interact/forms.html#h-17.13.4.1 regarding form element encoding.
+     * Otherwise, the most relevant looking RFC is https://www.ietf.org/rfc/rfc3986.txt, in particular section 2.2,
+     * which lists reserved chars:
+     *   reserved    = gen-delims / sub-delims
+     *   gen-delims  = ":" / "/" / "?" / "#" / "[" / "]" / "@"
+     *   sub-delims  = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
+     *   unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
+     * Note that the tilde is unreserved, contradicting the older RFC 1738, and some things that refer to it.
+     * RFC 1738 is from 12/1994, whereas 3986 was updated in 12/2005.
+     *   https://www.ietf.org/rfc/rfc1738.txt
+     *   https://www.cs.tut.fi/~jkorpela/tilde.html (note: this functioning URL contradicts advice given by referrant)
+     *
+     * See also: https://en.wikipedia.org/wiki/Uniform_Resource_Identifier
+     *
+     * finally: i observed that the "%20" path segment encoding problem in java is widely lamented on stack
+     * exchange, but the guava solution is not widely referenced.  many people suggest just writing the encoding
+     * method yourself, or using the one they pasted inline in an answer, both of which which seem like bad
+     * advice.  - @jmartin-sul, 7/2016
+     */
+    public static final String UNESCAPED_URL_CHARS = "-._~";
+    static Escaper formParamEscaper()
     {
-        try
-        {
-            return URLEncoder.encode(urlComponent, java.nio.charset.StandardCharsets.UTF_8.toString());
-        }
-        catch (java.io.UnsupportedEncodingException e)
-        {
-            getLogger().error(SulWowza.class.getSimpleName() + " this should never happen, since we should be using the JDK UTF-8 constant: " + urlComponent + " ; " + e);
-            throw new RuntimeException(e);
-        }
+        return new PercentEscaper(UNESCAPED_URL_CHARS, true);
+    }
+
+    static Escaper pathSegmentEscaper()
+    {
+        // "+" is actually allowed in path segments, and should be treated literally when encountered,
+        // but it seemed safer to encode it, as "%2B" should also be perfectly acceptable.
+        // note also, this permits fewer unescaped characters than Guava's built-in urlPathSegmentEscaper().
+        return new PercentEscaper(UNESCAPED_URL_CHARS, false);
+    }
+
+    static String escapeFormParam(String rawParamVal)
+    {
+        return formParamEscaper().escape(rawParamVal);
+    }
+
+    static String escapePathSegment(String rawPathSegment)
+    {
+        return pathSegmentEscaper().escape(rawPathSegment);
     }
 }

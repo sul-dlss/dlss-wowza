@@ -7,6 +7,7 @@ plugins {
 
 dependencies {
     compile group: 'commons-validator', name: 'commons-validator', version: '1.5.1'
+    compile group: 'com.google.guava', name: 'guava', version: '19.0'
 }
 
 import org.ajoberstar.grgit.Grgit
