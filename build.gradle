@@ -3,11 +3,7 @@ plugins {
     id 'jacoco'
     id 'com.github.kt3k.coveralls' version '2.6.3'
     id 'org.ajoberstar.grgit' version '1.4.2'
-}
-
-dependencies {
-    compile group: 'commons-validator', name: 'commons-validator', version: '1.5.1' // IP address validation
-    compile group: 'com.google.guava', name: 'guava', version: '19.0' // URL escaping
+    id 'distribution'
 }
 
 import org.ajoberstar.grgit.Grgit
@@ -98,4 +94,13 @@ task deploymentJar(type: Jar) {
             "deployVersion must match current git tag (or invoke deploymentJarRelaxed instead). deployVersion=${deployVersion} gitTag=${gitTag}"
     }
     with deploymentJarRelaxed
+}
+
+distributions {
+    main {
+        contents {
+            from(deploymentJar)
+            from { 'lib/runtime/' }
+        }
+    }
 }
