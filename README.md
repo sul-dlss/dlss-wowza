@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/sul-dlss/dlss-wowza.svg?branch=master)](https://travis-ci.org/sul-dlss/dlss-wowza) [![Coverage Status](https://coveralls.io/repos/github/sul-dlss/dlss-wowza/badge.svg?branch=master)](https://coveralls.io/github/sul-dlss/dlss-wowza?branch=master)
+[![GitHub version](https://badge.fury.io/gh/sul-dlss%2Fdlss-wowza.svg)](https://badge.fury.io/gh/sul-dlss%2Fdlss-wowza)
 
 # dlss-wowza
 Wowza server side modules.  Uses Gradle (with the Gradle wrapper) as the build tool (akin to Ruby's rake).
@@ -72,11 +73,11 @@ Alternatively, you can manually edit Application.xml and then reload the Wowza a
   - Note: if you do choose to tag from the command line, don't forget to push tags to Github.
 - Trigger the Jenkins build (`wowza-auth-plugin`) that creates the versioned .jar artifact for deployment.
   - Log into Jenkins, navigate to the 'wowza-auth-plugin' project, and invoke the 'Build Now' command.
-  - Note: 
+  - Note:
     - the Jenkins build is configured to use the master branch;  the jar will have the code from the last commit to the master branch.
     - the jar created will be copied to an artifacts directory on jenkins, from which puppet will get the versioned jar.
     - TODO:  build the jar from the tagged branch indicated in conf/version (see issue #23)
-- Update puppet to deploy the specific versioned artifact to the desired VM. 
+- Update puppet to deploy the specific versioned artifact to the desired VM.
   - make a PR in puppet to do this, following puppet practices.  (or ask your friendly devops rep to help)
 
 ### To deploy locally (e.g. on dev laptop)
