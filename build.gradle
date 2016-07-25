@@ -97,17 +97,26 @@ task deploymentJar(type: Jar) {
 }
 
 distributions {
+    // "into" is the destination dir within the distribution artifact, not the
+    // destination for the artifact.  so the jar files will all end up in the root
+    // of the artifact (instead of a directory named after artifactVersionString, which
+    // is the default).  e.g. "dlss-wowza-v0.4.1.tar" would contain "dlss-wowza-v0.4.1.jar"
+    // (as opposed to "dlss-wowza-v0.4.1/dlss-wowza-v0.4.1.jar").
+    // https://docs.gradle.org/current/javadoc/org/gradle/api/distribution/Distribution.html
+    // https://docs.gradle.org/current/javadoc/org/gradle/api/file/CopySpec.html
     main {
         contents {
             from(deploymentJar)
             from { 'lib/runtime/' }
-            // "into" is the destination dir within the distribution artifact, not the
-            // destination for the artifact.  so the jar files will all end up in the root
-            // of the artifact (instead of a directory named after artifactVersionString, which
-            // is the default).  e.g. "dlss-wowza-v0.4.1.tar" would contain "dlss-wowza-v0.4.1.jar"
-            // (as opposed to "dlss-wowza-v0.4.1/dlss-wowza-v0.4.1.jar").
-            // https://docs.gradle.org/current/javadoc/org/gradle/api/distribution/Distribution.html
-            // https://docs.gradle.org/current/javadoc/org/gradle/api/file/CopySpec.html
+            into { '/' }
+        }
+    }
+    // invoke relaxed dist via, e.g., './gradlew relaxedDistTar'
+    // https://docs.gradle.org/current/userguide/distribution_plugin.html#N14312
+    relaxed {
+        contents {
+            from(deploymentJarRelaxed)
+            from { 'lib/runtime/' }
             into { '/' }
         }
     }
