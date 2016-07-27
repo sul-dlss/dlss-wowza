@@ -86,7 +86,7 @@ public class SulWowza extends ModuleBase
     // --------------------------------- the public API is above this line ----------------------------------------
 
     /** default setting for stacks service connection timeout (time to establish a connection), in seconds */
-    public static final int DEFAULT_STACKS_CONNECTION_TIMEOUT = 30;
+    public static final int DEFAULT_STACKS_CONNECTION_TIMEOUT = 20;
 
     // TODO:  this approach expects the properties to be set in Application.xml
     //   maybe that's good, or maybe we want to load a java properties file from our plugin jar itself?
@@ -111,7 +111,7 @@ public class SulWowza extends ModuleBase
 
     /** default setting for stacks service read timeout (time for reading stream after connection is established),
      * in seconds */
-    public static final int DEFAULT_STACKS_READ_TIMEOUT = 30;
+    public static final int DEFAULT_STACKS_READ_TIMEOUT = 20;
 
     // TODO:  this approach expects the properties to be set in Application.xml
     //   maybe that's good, or maybe we want to load a java properties file from our plugin jar itself?
