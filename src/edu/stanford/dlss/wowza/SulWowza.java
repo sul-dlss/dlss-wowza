@@ -16,6 +16,7 @@ import com.wowza.wms.application.IApplicationInstance;
 import com.wowza.wms.httpstreamer.cupertinostreaming.httpstreamer.HTTPStreamerSessionCupertino;
 import com.wowza.wms.httpstreamer.model.IHTTPStreamerSession;
 import com.wowza.wms.httpstreamer.mpegdashstreaming.httpstreamer.HTTPStreamerSessionMPEGDash;
+import com.wowza.wms.httpstreamer.sanjosestreaming.httpstreamer.HTTPStreamerSessionSanJose;
 import com.wowza.wms.module.ModuleBase;
 
 /** Stanford University Libraries Wowza Plugin Code */
@@ -82,6 +83,22 @@ public class SulWowza extends ModuleBase
         }
     }
 
+    /** Invoked when an Adobe HDS streaming session is created (known as San Jose Streaming in Wowza parlance).
+     *  This is an HTTP-based (port 80) streaming protocol for Flash. We currently use this for streaming MP3
+     *  files, since there are no current HLS players that support MP3 across all browsers. */
+    public void onHTTPSanJoseStreamingSessionCreate(HTTPStreamerSessionSanJose httpSession)
+    {
+        if (invalidConfiguration)
+        {
+            getLogger().error(this.getClass().getSimpleName() + " onHTTPSanJoseinoStreamingSessionCreate: rejecting session due to invalid stacksURL property " + httpSession.getStreamName());
+            httpSession.rejectSession();
+        }
+        else
+        {
+          getLogger().info(this.getClass().getSimpleName() + " onHTTPSanJoseStreamingSessionCreate: " + httpSession.getStreamName());
+          authorizeSession(httpSession);
+        }
+    }
 
     // --------------------------------- the public API is above this line ----------------------------------------
 
