@@ -75,7 +75,7 @@
       </Properties>
     </TimedText>
     <!-- HTTPStreamers (separate with commas): cupertinostreaming, smoothstreaming, sanjosestreaming, mpegdashstreaming, dvrchunkstreaming -->
-    <HTTPStreamers>cupertinostreaming, mpegdashstreaming</HTTPStreamers>
+    <HTTPStreamers>cupertinostreaming, sanjosestreaming, mpegdashstreaming</HTTPStreamers>
     <MediaCache>
       <MediaCacheSourceList></MediaCacheSourceList>
     </MediaCache>
