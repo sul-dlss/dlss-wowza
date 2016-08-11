@@ -13,7 +13,6 @@ import com.wowza.wms.application.WMSProperties;
 import com.wowza.wms.httpstreamer.cupertinostreaming.httpstreamer.HTTPStreamerSessionCupertino;
 import com.wowza.wms.httpstreamer.model.IHTTPStreamerSession;
 import com.wowza.wms.httpstreamer.mpegdashstreaming.httpstreamer.HTTPStreamerSessionMPEGDash;
-import com.wowza.wms.httpstreamer.sanjosestreaming.httpstreamer.HTTPStreamerSessionSanJose;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -202,29 +201,6 @@ public class TestSulWowza
         SulWowza spyModule = spy(testModule);
         HTTPStreamerSessionMPEGDash sessionMock = mock(HTTPStreamerSessionMPEGDash.class);
         spyModule.onHTTPMPEGDashStreamingSessionCreate(sessionMock);
-
-        verify(sessionMock).rejectSession();
-        verify(spyModule, never()).authorizeSession(sessionMock);
-    }
-
-    @Test
-    public void onHTTPSanJoseStreamingSessionCreate_calls_authorizeSession_ifValidConfiguration()
-    {
-        SulWowza spyModule = spy(testModule);
-        HTTPStreamerSessionSanJose sessionMock = mock(HTTPStreamerSessionSanJose.class);
-        spyModule.invalidConfiguration = false;
-        spyModule.onHTTPSanJoseStreamingSessionCreate(sessionMock);
-
-        verify(spyModule).authorizeSession(sessionMock);
-    }
-
-    @Test
-    public void onHTTPSanJoseStreamingSessionCreate_rejectsSession_ifInvalidConfiguration()
-    {
-        testModule.invalidConfiguration = true;
-        SulWowza spyModule = spy(testModule);
-        HTTPStreamerSessionSanJose sessionMock = mock(HTTPStreamerSessionSanJose.class);
-        spyModule.onHTTPSanJoseStreamingSessionCreate(sessionMock);
 
         verify(sessionMock).rejectSession();
         verify(spyModule, never()).authorizeSession(sessionMock);
