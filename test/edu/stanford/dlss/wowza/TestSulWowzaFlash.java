@@ -299,6 +299,7 @@ public class TestSulWowzaFlash
 
         SulWowzaFlash spyModule = spy(testModule);
         when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateUserIp("1")).thenReturn(true);
 
         spyModule.authorizePlay(queryString, userIp, streamName);
         verify(spyModule).validateStacksToken(token);
@@ -335,6 +336,25 @@ public class TestSulWowzaFlash
 
         spyModule.authorizePlay(queryString, userIp, streamName);
         verify(spyModule).validateStreamName(streamName);
+    }
+
+    @Test
+    public void authorizePlay_falseIfNullDruid()
+    {
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "aa/123/bb/1234/filename.ext";
+        String token = "abcd";
+
+        SulWowzaFlash spyModule = spy(testModule);
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+        when(spyModule.validateUserIp(userIp)).thenReturn(true);
+        when(spyModule.validateStreamName(streamName)).thenReturn(true);
+        when(spyModule.getDruid(streamName)).thenReturn(null);
+
+        assertEquals(false, spyModule.authorizePlay(queryString, userIp, streamName));
+        verify(spyModule, never()).verifyStacksToken(anyString(), anyString(), anyString(), anyString());
     }
 
     @Test
