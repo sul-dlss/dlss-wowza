@@ -22,22 +22,22 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TestSulWowza
+public class TestSulWowzaFlash
 {
-    SulWowza testModule;
+    SulWowzaFlash testModule;
     static String stacksToken = "encryptedStacksMediaToken";
     static String queryStr = "stacks_token=" + stacksToken;
 
     @Before
     public void setUp()
     {
-        testModule = new SulWowza();
+        testModule = new SulWowzaFlash();
     }
 
     @Test
     public void onAppStart_calls_setStacksConnectionTimeout()
     {
-        SulWowza spyModule = spy(testModule);
+        SulWowzaFlash spyModule = spy(testModule);
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
         spyModule.onAppStart(appInstanceMock);
 
@@ -47,7 +47,7 @@ public class TestSulWowza
     @Test
     public void onAppStart_calls_setStacksReadTimeout()
     {
-        SulWowza spyModule = spy(testModule);
+        SulWowzaFlash spyModule = spy(testModule);
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
         spyModule.onAppStart(appInstanceMock);
 
@@ -57,7 +57,7 @@ public class TestSulWowza
     @Test
     public void onAppStart_calls_getStacksUrl()
     {
-        SulWowza spyModule = spy(testModule);
+        SulWowzaFlash spyModule = spy(testModule);
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
         spyModule.onAppStart(appInstanceMock);
 
@@ -69,22 +69,22 @@ public class TestSulWowza
     {
         String exampleUrl = "http://example.org";
         WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyStr("stacksURL", SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenReturn(exampleUrl);
+        when(mockProperties.getPropertyStr("stacksURL", SulWowzaFlash.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenReturn(exampleUrl);
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
         when(appInstanceMock.getProperties()).thenReturn(mockProperties);
         testModule.onAppStart(appInstanceMock);
-        assertEquals(exampleUrl, SulWowza.stacksTokenVerificationBaseUrl);
+        assertEquals(exampleUrl, SulWowzaFlash.stacksTokenVerificationBaseUrl);
     }
 
     @Test
     public void onAppStart_defaultUrl()
     {
         WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyStr("stacksURL", SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenReturn(SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL);
+        when(mockProperties.getPropertyStr("stacksURL", SulWowzaFlash.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenReturn(SulWowzaFlash.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL);
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
         when(appInstanceMock.getProperties()).thenReturn(mockProperties);
         testModule.onAppStart(appInstanceMock);
-        assertEquals(SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL, SulWowza.stacksTokenVerificationBaseUrl);
+        assertEquals(SulWowzaFlash.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL, SulWowzaFlash.stacksTokenVerificationBaseUrl);
     }
 
     @Test
@@ -92,11 +92,11 @@ public class TestSulWowza
     {
         String badUrlStr = "badUrl";
         WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyStr("stacksURL", SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenReturn(badUrlStr);
+        when(mockProperties.getPropertyStr("stacksURL", SulWowzaFlash.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenReturn(badUrlStr);
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
         when(appInstanceMock.getProperties()).thenReturn(mockProperties);
         testModule.onAppStart(appInstanceMock);
-        assertEquals(badUrlStr, SulWowza.stacksTokenVerificationBaseUrl);
+        assertEquals(badUrlStr, SulWowzaFlash.stacksTokenVerificationBaseUrl);
         assertTrue(testModule.invalidConfiguration);
     }
 
@@ -105,11 +105,11 @@ public class TestSulWowza
     public void onAppStart_urlEmptyStr_setsInvalidConfiguration()
     {
         WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyStr("stacksURL", SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenReturn("");
+        when(mockProperties.getPropertyStr("stacksURL", SulWowzaFlash.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenReturn("");
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
         when(appInstanceMock.getProperties()).thenReturn(mockProperties);
         testModule.onAppStart(appInstanceMock);
-        assertEquals("", SulWowza.stacksTokenVerificationBaseUrl);
+        assertEquals("", SulWowzaFlash.stacksTokenVerificationBaseUrl);
         assertTrue(testModule.invalidConfiguration);
     }
 
@@ -118,11 +118,11 @@ public class TestSulWowza
     public void onAppStart_urlNull_setsInvalidConfiguration()
     {
         WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyStr("stacksURL", SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenReturn(null);
+        when(mockProperties.getPropertyStr("stacksURL", SulWowzaFlash.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenReturn(null);
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
         when(appInstanceMock.getProperties()).thenReturn(mockProperties);
         testModule.onAppStart(appInstanceMock);
-        assertEquals(null, SulWowza.stacksTokenVerificationBaseUrl);
+        assertEquals(null, SulWowzaFlash.stacksTokenVerificationBaseUrl);
         assertTrue(testModule.invalidConfiguration);
     }
 
@@ -138,11 +138,11 @@ public class TestSulWowza
 
         String badUrlStr = "badUrl";
         WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyStr("stacksURL", SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenReturn(badUrlStr);
+        when(mockProperties.getPropertyStr("stacksURL", SulWowzaFlash.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenReturn(badUrlStr);
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
         when(appInstanceMock.getProperties()).thenReturn(mockProperties);
         testModule.onAppStart(appInstanceMock);
-        assertEquals(badUrlStr, SulWowza.stacksTokenVerificationBaseUrl);
+        assertEquals(badUrlStr, SulWowzaFlash.stacksTokenVerificationBaseUrl);
 
         try
         {
@@ -163,7 +163,7 @@ public class TestSulWowza
     @Test
     public void onHTTPCupertinoStreamingSessionCreate_calls_authorizeSession_ifValidConfiguration()
     {
-        SulWowza spyModule = spy(testModule);
+        SulWowzaFlash spyModule = spy(testModule);
         HTTPStreamerSessionCupertino sessionMock = mock(HTTPStreamerSessionCupertino.class);
         spyModule.invalidConfiguration = false;
         spyModule.onHTTPCupertinoStreamingSessionCreate(sessionMock);
@@ -175,7 +175,7 @@ public class TestSulWowza
     public void onHTTPCupertinoStreamingSessionCreate_rejectsSession_ifInvalidConfiguration()
     {
         testModule.invalidConfiguration = true;
-        SulWowza spyModule = spy(testModule);
+        SulWowzaFlash spyModule = spy(testModule);
         HTTPStreamerSessionCupertino sessionMock = mock(HTTPStreamerSessionCupertino.class);
         testModule.onHTTPCupertinoStreamingSessionCreate(sessionMock);
 
@@ -186,7 +186,7 @@ public class TestSulWowza
     @Test
     public void onHTTPMPEGDashStreamingSessionCreate_calls_authorizeSession_ifValidConfiguration()
     {
-        SulWowza spyModule = spy(testModule);
+        SulWowzaFlash spyModule = spy(testModule);
         HTTPStreamerSessionMPEGDash sessionMock = mock(HTTPStreamerSessionMPEGDash.class);
         spyModule.invalidConfiguration = false;
         spyModule.onHTTPMPEGDashStreamingSessionCreate(sessionMock);
@@ -198,7 +198,7 @@ public class TestSulWowza
     public void onHTTPMPEGDashStreamingSessionCreate_rejectsSession_ifInvalidConfiguration()
     {
         testModule.invalidConfiguration = true;
-        SulWowza spyModule = spy(testModule);
+        SulWowzaFlash spyModule = spy(testModule);
         HTTPStreamerSessionMPEGDash sessionMock = mock(HTTPStreamerSessionMPEGDash.class);
         spyModule.onHTTPMPEGDashStreamingSessionCreate(sessionMock);
 
@@ -211,22 +211,22 @@ public class TestSulWowza
     {
         int exampleValue = 5;
         WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyInt("stacksConnectionTimeout", SulWowza.DEFAULT_STACKS_CONNECTION_TIMEOUT)).thenReturn(exampleValue);
+        when(mockProperties.getPropertyInt("stacksConnectionTimeout", SulWowzaFlash.DEFAULT_STACKS_CONNECTION_TIMEOUT)).thenReturn(exampleValue);
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
         when(appInstanceMock.getProperties()).thenReturn(mockProperties);
         testModule.setStacksConnectionTimeout(appInstanceMock);
-        assertEquals(exampleValue, SulWowza.stacksConnectionTimeout);
+        assertEquals(exampleValue, SulWowzaFlash.stacksConnectionTimeout);
     }
 
     @Test
     public void setStacksConnectionTimeout_defaultValue()
     {
         WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyInt("stacksConnectionTimeout", SulWowza.DEFAULT_STACKS_CONNECTION_TIMEOUT)).thenReturn(SulWowza.DEFAULT_STACKS_CONNECTION_TIMEOUT);
+        when(mockProperties.getPropertyInt("stacksConnectionTimeout", SulWowzaFlash.DEFAULT_STACKS_CONNECTION_TIMEOUT)).thenReturn(SulWowzaFlash.DEFAULT_STACKS_CONNECTION_TIMEOUT);
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
         when(appInstanceMock.getProperties()).thenReturn(mockProperties);
         testModule.setStacksConnectionTimeout(appInstanceMock);
-        assertEquals(SulWowza.DEFAULT_STACKS_CONNECTION_TIMEOUT, SulWowza.stacksConnectionTimeout);
+        assertEquals(SulWowzaFlash.DEFAULT_STACKS_CONNECTION_TIMEOUT, SulWowzaFlash.stacksConnectionTimeout);
     }
 
     @Test
@@ -234,22 +234,22 @@ public class TestSulWowza
     {
         int exampleValue = -4;
         WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyInt("stacksConnectionTimeout", SulWowza.DEFAULT_STACKS_CONNECTION_TIMEOUT)).thenReturn(exampleValue);
+        when(mockProperties.getPropertyInt("stacksConnectionTimeout", SulWowzaFlash.DEFAULT_STACKS_CONNECTION_TIMEOUT)).thenReturn(exampleValue);
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
         when(appInstanceMock.getProperties()).thenReturn(mockProperties);
         testModule.setStacksConnectionTimeout(appInstanceMock);
-        assertEquals(SulWowza.DEFAULT_STACKS_CONNECTION_TIMEOUT, SulWowza.stacksConnectionTimeout);
+        assertEquals(SulWowzaFlash.DEFAULT_STACKS_CONNECTION_TIMEOUT, SulWowzaFlash.stacksConnectionTimeout);
     }
 
     @Test
     public void setStacksConnectionTimeout_revertsToDefault_ifExceptionThrown()
     {
         WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyInt("stacksConnectionTimeout", SulWowza.DEFAULT_STACKS_CONNECTION_TIMEOUT)).thenThrow(new java.lang.ClassCastException());
+        when(mockProperties.getPropertyInt("stacksConnectionTimeout", SulWowzaFlash.DEFAULT_STACKS_CONNECTION_TIMEOUT)).thenThrow(new java.lang.ClassCastException());
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
         when(appInstanceMock.getProperties()).thenReturn(mockProperties);
         testModule.setStacksConnectionTimeout(appInstanceMock);
-        assertEquals(SulWowza.DEFAULT_STACKS_CONNECTION_TIMEOUT, SulWowza.stacksConnectionTimeout);
+        assertEquals(SulWowzaFlash.DEFAULT_STACKS_CONNECTION_TIMEOUT, SulWowzaFlash.stacksConnectionTimeout);
     }
 
     @Test
@@ -257,22 +257,22 @@ public class TestSulWowza
     {
         int exampleValue = 5;
         WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyInt("stacksReadTimeout", SulWowza.DEFAULT_STACKS_READ_TIMEOUT)).thenReturn(exampleValue);
+        when(mockProperties.getPropertyInt("stacksReadTimeout", SulWowzaFlash.DEFAULT_STACKS_READ_TIMEOUT)).thenReturn(exampleValue);
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
         when(appInstanceMock.getProperties()).thenReturn(mockProperties);
         testModule.setStacksReadTimeout(appInstanceMock);
-        assertEquals(exampleValue, SulWowza.stacksReadTimeout);
+        assertEquals(exampleValue, SulWowzaFlash.stacksReadTimeout);
     }
 
     @Test
     public void setStacksReadTimeout_defaultValue()
     {
         WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyInt("stacksReadTimeout", SulWowza.DEFAULT_STACKS_READ_TIMEOUT)).thenReturn(SulWowza.DEFAULT_STACKS_READ_TIMEOUT);
+        when(mockProperties.getPropertyInt("stacksReadTimeout", SulWowzaFlash.DEFAULT_STACKS_READ_TIMEOUT)).thenReturn(SulWowzaFlash.DEFAULT_STACKS_READ_TIMEOUT);
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
         when(appInstanceMock.getProperties()).thenReturn(mockProperties);
         testModule.setStacksReadTimeout(appInstanceMock);
-        assertEquals(SulWowza.DEFAULT_STACKS_READ_TIMEOUT, SulWowza.stacksReadTimeout);
+        assertEquals(SulWowzaFlash.DEFAULT_STACKS_READ_TIMEOUT, SulWowzaFlash.stacksReadTimeout);
     }
 
     @Test
@@ -280,29 +280,29 @@ public class TestSulWowza
     {
         int exampleValue = -4;
         WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyInt("stacksReadTimeout", SulWowza.DEFAULT_STACKS_READ_TIMEOUT)).thenReturn(exampleValue);
+        when(mockProperties.getPropertyInt("stacksReadTimeout", SulWowzaFlash.DEFAULT_STACKS_READ_TIMEOUT)).thenReturn(exampleValue);
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
         when(appInstanceMock.getProperties()).thenReturn(mockProperties);
         testModule.setStacksReadTimeout(appInstanceMock);
-        assertEquals(SulWowza.DEFAULT_STACKS_READ_TIMEOUT, SulWowza.stacksReadTimeout);
+        assertEquals(SulWowzaFlash.DEFAULT_STACKS_READ_TIMEOUT, SulWowzaFlash.stacksReadTimeout);
     }
 
     @Test
     public void setStacksReadTimeout_revertsToDefault_ifExceptionThrown()
     {
         WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyInt("stacksReadTimeout", SulWowza.DEFAULT_STACKS_READ_TIMEOUT)).thenThrow(new java.lang.ClassCastException());
+        when(mockProperties.getPropertyInt("stacksReadTimeout", SulWowzaFlash.DEFAULT_STACKS_READ_TIMEOUT)).thenThrow(new java.lang.ClassCastException());
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
         when(appInstanceMock.getProperties()).thenReturn(mockProperties);
         testModule.setStacksReadTimeout(appInstanceMock);
-        assertEquals(SulWowza.DEFAULT_STACKS_READ_TIMEOUT, SulWowza.stacksReadTimeout);
+        assertEquals(SulWowzaFlash.DEFAULT_STACKS_READ_TIMEOUT, SulWowzaFlash.stacksReadTimeout);
     }
 
     @Test
     public void getStacksUrl_returnsEmptyString_ifExceptionThrown()
     {
         WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyStr("stacksURL", SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenThrow(new java.lang.ClassCastException());
+        when(mockProperties.getPropertyStr("stacksURL", SulWowzaFlash.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenThrow(new java.lang.ClassCastException());
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
         when(appInstanceMock.getProperties()).thenReturn(mockProperties);
         assertEquals("", testModule.getStacksUrl(appInstanceMock));
@@ -322,7 +322,7 @@ public class TestSulWowza
         when(sessionMock.getHTTPHeaderMap()).thenReturn(mockHttpHeaderMap);
         when(sessionMock.getQueryStr()).thenReturn(queryStr);
         when(sessionMock.getStreamName()).thenReturn(streamName);
-        SulWowza spyModule = spy(testModule);
+        SulWowzaFlash spyModule = spy(testModule);
         when(spyModule.verifyStacksToken(stacksToken, druid, filename, userIp)).thenReturn(true);
 
         spyModule.authorizeSession(sessionMock);
@@ -342,7 +342,7 @@ public class TestSulWowza
         when(sessionMock.getHTTPHeaderMap()).thenReturn(mockHttpHeaderMap);
         when(sessionMock.getQueryStr()).thenReturn(queryStr);
         when(sessionMock.getStreamName()).thenReturn(streamName);
-        SulWowza spyModule = spy(testModule);
+        SulWowzaFlash spyModule = spy(testModule);
         when(spyModule.verifyStacksToken(stacksToken, druid, filename, userIp)).thenReturn(false);
 
         spyModule.authorizeSession(sessionMock);
@@ -353,7 +353,7 @@ public class TestSulWowza
     public void authorizeSession_getsStacksToken()
     {
         IHTTPStreamerSession sessionMock = mock(IHTTPStreamerSession.class);
-        SulWowza spyModule = spy(testModule);
+        SulWowzaFlash spyModule = spy(testModule);
 
         spyModule.authorizeSession(sessionMock);
         verify(spyModule).getStacksToken(anyString());
@@ -364,7 +364,7 @@ public class TestSulWowza
     {
         IHTTPStreamerSession sessionMock = mock(IHTTPStreamerSession.class);
         when(sessionMock.getQueryStr()).thenReturn(queryStr);
-        SulWowza spyModule = spy(testModule);
+        SulWowzaFlash spyModule = spy(testModule);
 
         spyModule.authorizeSession(sessionMock);
         verify(spyModule).validateStacksToken(stacksToken);
@@ -377,7 +377,7 @@ public class TestSulWowza
         Map<String, String> mockHttpHeaderMap = new HashMap<String, String>();
         Map<String, String> spyHttpHeaderMap = spy(mockHttpHeaderMap);
         when(sessionMock.getHTTPHeaderMap()).thenReturn(spyHttpHeaderMap);
-        SulWowza spyModule = spy(testModule);
+        SulWowzaFlash spyModule = spy(testModule);
 
         spyModule.authorizeSession(sessionMock);
         verify(sessionMock).getHTTPHeaderMap();
@@ -393,7 +393,7 @@ public class TestSulWowza
         mockHttpHeaderMap.put("x-forwarded-for", ipAddr);
         when(sessionMock.getHTTPHeaderMap()).thenReturn(mockHttpHeaderMap);
         when(sessionMock.getQueryStr()).thenReturn(queryStr);
-        SulWowza spyModule = spy(testModule);
+        SulWowzaFlash spyModule = spy(testModule);
 
         spyModule.authorizeSession(sessionMock);
         verify(spyModule).validateUserIp(ipAddr);
@@ -409,7 +409,7 @@ public class TestSulWowza
         mockHttpHeaderMap.put("x-forwarded-for", "127.6.6.6");  // userIp
         when(sessionMock.getHTTPHeaderMap()).thenReturn(mockHttpHeaderMap);
         when(sessionMock.getStreamName()).thenReturn(streamName);
-        SulWowza spyModule = spy(testModule);
+        SulWowzaFlash spyModule = spy(testModule);
 
         spyModule.authorizeSession(sessionMock);
         verify(spyModule).validateStreamName(streamName);
@@ -425,7 +425,7 @@ public class TestSulWowza
         when(sessionMock.getHTTPHeaderMap()).thenReturn(mockHttpHeaderMap);
         when(sessionMock.getQueryStr()).thenReturn(queryStr);
         when(sessionMock.getStreamName()).thenReturn(streamName);
-        SulWowza spyModule = spy(testModule);
+        SulWowzaFlash spyModule = spy(testModule);
 
         spyModule.authorizeSession(sessionMock);
         verify(spyModule).getDruid(streamName);
@@ -437,7 +437,7 @@ public class TestSulWowza
         String streamName = "aa/123/bb/1234/filename.ext";
         IHTTPStreamerSession sessionMock = mock(IHTTPStreamerSession.class);
         when(sessionMock.getStreamName()).thenReturn(streamName);
-        SulWowza spyModule = spy(testModule);
+        SulWowzaFlash spyModule = spy(testModule);
         when(spyModule.getDruid(streamName)).thenReturn(null);
 
         spyModule.authorizeSession(sessionMock);
@@ -455,7 +455,7 @@ public class TestSulWowza
         when(sessionMock.getHTTPHeaderMap()).thenReturn(mockHttpHeaderMap);
         when(sessionMock.getQueryStr()).thenReturn(queryStr);
         when(sessionMock.getStreamName()).thenReturn(streamName);
-        SulWowza spyModule = spy(testModule);
+        SulWowzaFlash spyModule = spy(testModule);
 
         spyModule.authorizeSession(sessionMock);
         verify(spyModule).getFilename(streamName);
@@ -467,7 +467,7 @@ public class TestSulWowza
         String streamName = "aa/123/bb/1234/filename.ext";
         IHTTPStreamerSession sessionMock = mock(IHTTPStreamerSession.class);
         when(sessionMock.getStreamName()).thenReturn(streamName);
-        SulWowza spyModule = spy(testModule);
+        SulWowzaFlash spyModule = spy(testModule);
         when(spyModule.getFilename(streamName)).thenReturn(null);
 
         spyModule.authorizeSession(sessionMock);
@@ -479,7 +479,7 @@ public class TestSulWowza
     /** verifyStacksToken calls getVerifyStacksTokenUrl */
     public void verifyStacksToken_getsVerifyStacksTokenUrl()
     {
-        SulWowza spyModule = spy(testModule);
+        SulWowzaFlash spyModule = spy(testModule);
         spyModule.verifyStacksToken(anyString(), anyString(), anyString(), anyString());
         verify(spyModule).getVerifyStacksTokenUrl(anyString(), anyString(), anyString(), anyString());
     }
@@ -489,9 +489,9 @@ public class TestSulWowza
     public void verifyStacksToken_verifiesStacksTokenUrl()
             throws MalformedURLException
     {
-        String expUrlStr = SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL + "/media///verify_token?stacks_token=&user_ip=";
+        String expUrlStr = SulWowzaFlash.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL + "/media///verify_token?stacks_token=&user_ip=";
         URL expURL = new URL(expUrlStr);
-        SulWowza spyModule = spy(testModule);
+        SulWowzaFlash spyModule = spy(testModule);
         when(spyModule.getVerifyStacksTokenUrl(anyString(), anyString(), anyString(), anyString())).thenReturn(expURL);
 
         spyModule.verifyStacksToken(anyString(), anyString(), anyString(), anyString());
@@ -502,7 +502,7 @@ public class TestSulWowza
     /** if the result to getVerifyStacksTokenUrl is null, don't call verifyTokenAgainstStacksService and return false */
     public void verifyStacksToken_rejectsForNullUrl()
     {
-        SulWowza spyModule = spy(testModule);
+        SulWowzaFlash spyModule = spy(testModule);
         when(spyModule.getVerifyStacksTokenUrl(anyString(), anyString(), anyString(), anyString())).thenReturn(null);
         boolean result = spyModule.verifyStacksToken(anyString(), anyString(), anyString(), anyString());
         assertFalse(result);
@@ -545,7 +545,7 @@ public class TestSulWowza
     @Test
     public void getStacksToken_nullQueryStr()
     {
-        SulWowza testModule = new SulWowza();
+        SulWowzaFlash testModule = new SulWowzaFlash();
         assertNull(testModule.getStacksToken(null));
     }
 
@@ -741,7 +741,7 @@ public class TestSulWowza
     public void getVerifyStacksTokenUrl_validUrl()
     {
         WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyStr(anyString(), anyString())).thenReturn(SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL);
+        when(mockProperties.getPropertyStr(anyString(), anyString())).thenReturn(SulWowzaFlash.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL);
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
         when(appInstanceMock.getProperties()).thenReturn(mockProperties);
         testModule.onAppStart(appInstanceMock);
@@ -750,7 +750,7 @@ public class TestSulWowza
         String userIp = "0.0.0.0";
         String expPath = "/media/" + druid + "/" + filename + "/verify_token";
         String expQueryStr = "?stacks_token=" + stacksToken + "&user_ip=" + userIp;
-        String expUrlStr = SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL + expPath + expQueryStr;
+        String expUrlStr = SulWowzaFlash.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL + expPath + expQueryStr;
 
         URL resultUrl = testModule.getVerifyStacksTokenUrl(stacksToken, druid, filename, userIp);
         assertEquals(expUrlStr, resultUrl.toString());
@@ -760,7 +760,7 @@ public class TestSulWowza
     public void verifyTokenAgainstStacksService_filenameNeedsEncoding()
     {
         WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyStr(anyString(), anyString())).thenReturn(SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL);
+        when(mockProperties.getPropertyStr(anyString(), anyString())).thenReturn(SulWowzaFlash.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL);
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
         when(appInstanceMock.getProperties()).thenReturn(mockProperties);
         testModule.onAppStart(appInstanceMock);
@@ -771,7 +771,7 @@ public class TestSulWowza
         String encodedFilename = "%7B%28%5Bspecial-chars%5D%29%7D%3A%20%C3%BC%40%3F%3B%3D%26%23%24%2520%5E%2A.%7C-_%2B%21%2C~%27%2F%22%60";
         String expPath = "/media/" + druid + "/" + encodedFilename + "/verify_token";
         String expQueryStr = "?stacks_token=" + stacksToken + "&user_ip=" + userIp;
-        String expUrlStr = SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL + expPath + expQueryStr;
+        String expUrlStr = SulWowzaFlash.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL + expPath + expQueryStr;
 
         URL resultUrl = testModule.getVerifyStacksTokenUrl(stacksToken, druid, filename, userIp);
         assertEquals(expUrlStr, resultUrl.toString());
@@ -781,7 +781,7 @@ public class TestSulWowza
     public void verifyTokenAgainstStacksService_stacksTokenNeedsEncoding()
     {
         WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyStr(anyString(), anyString())).thenReturn(SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL);
+        when(mockProperties.getPropertyStr(anyString(), anyString())).thenReturn(SulWowzaFlash.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL);
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
         when(appInstanceMock.getProperties()).thenReturn(mockProperties);
         testModule.onAppStart(appInstanceMock);
@@ -793,7 +793,7 @@ public class TestSulWowza
         // specifically list the expected encodings, as we've run into trouble with encoding methods that were encoding in unexpected ways
         String encodedToken = "%7B%28%5Bspecial-chars%5D%29%7D%3A+%C3%BC%40%3F%3B%3D%26%23%24%2520%5E%2A.%7C-_%2B%21%2C~%27%2F%22%60";
         String expQueryStr = "?stacks_token=" + encodedToken + "&user_ip=" + userIp;
-        String expUrlStr = SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL + expPath + expQueryStr;
+        String expUrlStr = SulWowzaFlash.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL + expPath + expQueryStr;
 
         URL resultUrl = testModule.getVerifyStacksTokenUrl(stacksTokenWithWeirdChars, druid, filename, userIp);
         assertEquals(expUrlStr, resultUrl.toString());
@@ -842,7 +842,7 @@ public class TestSulWowza
         String urlStr = "http://localhost:3000" + expPath + expQueryStr;
         URL stacksURL = new URL(urlStr);
 
-        SulWowza spyModule = spy(testModule);
+        SulWowzaFlash spyModule = spy(testModule);
         spyModule.verifyTokenAgainstStacksService(stacksURL);
         verify(spyModule).getStacksHttpURLConn(stacksURL, "HEAD");
     }
@@ -866,7 +866,7 @@ public class TestSulWowza
 
         try
         {
-            SulWowza spyModule = spy(testModule);
+            SulWowzaFlash spyModule = spy(testModule);
             HttpURLConnection mockStacksConn = mock(HttpURLConnection.class);
             when(spyModule.getStacksHttpURLConn(stacksURL, "HEAD")).thenReturn(mockStacksConn);
             when(mockStacksConn.getResponseCode()).thenReturn(HttpURLConnection.HTTP_OK);
@@ -902,7 +902,7 @@ public class TestSulWowza
 
         try
         {
-            SulWowza spyModule = spy(testModule);
+            SulWowzaFlash spyModule = spy(testModule);
             HttpURLConnection mockStacksConn = mock(HttpURLConnection.class);
             when(spyModule.getStacksHttpURLConn(stacksURL, "HEAD")).thenReturn(mockStacksConn);
             when(mockStacksConn.getResponseCode()).thenReturn(HttpURLConnection.HTTP_FORBIDDEN);
