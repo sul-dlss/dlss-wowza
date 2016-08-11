@@ -26,6 +26,7 @@ import com.wowza.wms.request.RequestFunction;
 public class SulWowza extends ModuleBase
 {
     static String stacksTokenVerificationBaseUrl;
+    static String stacksUrlErrorMsg = "rejecting due to invalid stacksURL property (" + stacksTokenVerificationBaseUrl + ")";
     static int stacksConnectionTimeout;
     static int stacksReadTimeout;
 
@@ -58,7 +59,7 @@ public class SulWowza extends ModuleBase
     {
         if (invalidConfiguration)
         {
-            getLogger().error(this.getClass().getSimpleName() + " onHTTPMPEGDashStreamingSessionCreate: rejecting session due to invalid stacksURL property " + httpSession.getStreamName());
+            getLogger().error(this.getClass().getSimpleName() + " onHTTPMPEGDashStreamingSessionCreate: " + stacksUrlErrorMsg + "; streamName: " + httpSession.getStreamName());
             httpSession.rejectSession();
         }
         else
@@ -75,7 +76,7 @@ public class SulWowza extends ModuleBase
     {
         if (invalidConfiguration)
         {
-            getLogger().error(this.getClass().getSimpleName() + " onHTTPCupertinoStreamingSessionCreate: rejecting session due to invalid stacksURL property " + httpSession.getStreamName());
+            getLogger().error(this.getClass().getSimpleName() + " onHTTPCupertinoStreamingSessionCreate: " + stacksUrlErrorMsg + "; streamName: " + httpSession.getStreamName());
             httpSession.rejectSession();
         }
         else
@@ -90,7 +91,7 @@ public class SulWowza extends ModuleBase
      * we can reliably intercept a Flash connection and get the name of the stream.
      */
     public void play(IClient client, RequestFunction function, AMFDataList params)
-	  {
+	{
         String streamName = params.getString(PARAM1);
 
         //get the real stream name if this is an alias.
@@ -98,7 +99,7 @@ public class SulWowza extends ModuleBase
 
         if (invalidConfiguration)
         {
-            getLogger().error(this.getClass().getSimpleName() + " play: rejecting session due to invalid stacksURL property " + streamName);
+            getLogger().error(this.getClass().getSimpleName() + " play: " + stacksUrlErrorMsg + "; streamName:  " + streamName);
             client.shutdownClient();
         }
         else
@@ -114,7 +115,7 @@ public class SulWowza extends ModuleBase
                client.shutdownClient();
             }
         }
-	  }
+	}
 
 
     // --------------------------------- the public API is above this line ----------------------------------------
