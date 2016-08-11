@@ -268,7 +268,7 @@ public class TestSulWowzaFlash
     }
 
     @Test
-    public void authorizePlay_falseIfAuthorized()
+    public void authorizePlay_falseIfNotAuthorized()
     {
         String filename = "ignored";
         String streamName = "oo/000/oo/0000/" + filename;
@@ -355,6 +355,87 @@ public class TestSulWowzaFlash
 
         assertEquals(false, spyModule.authorizePlay(queryString, userIp, streamName));
         verify(spyModule, never()).verifyStacksToken(anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    public void authorizePlay_falseIfNullFilename()
+    {
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "aa/123/bb/1234/filename.ext";
+        String token = "abcd";
+
+        SulWowzaFlash spyModule = spy(testModule);
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+        when(spyModule.validateUserIp(userIp)).thenReturn(true);
+        when(spyModule.validateStreamName(streamName)).thenReturn(true);
+        when(spyModule.getFilename(streamName)).thenReturn(null);
+
+        assertEquals(false, spyModule.authorizePlay(queryString, userIp, streamName));
+        verify(spyModule, never()).verifyStacksToken(anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    public void authorizePlay_getsStacksToken()
+    {
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "aa/123/bb/1234/filename.ext";
+
+        SulWowzaFlash spyModule = spy(testModule);
+        spyModule.authorizePlay(queryString, userIp, streamName);
+        verify(spyModule).getStacksToken(queryString);
+    }
+
+    @Test
+    public void authorizePlay_getsFilenameFromStreamName()
+    {
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "aa/123/bb/1234/filename.ext";
+        String token = "abcd";
+        SulWowzaFlash spyModule = spy(testModule);
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+        when(spyModule.validateUserIp(userIp)).thenReturn(true);
+        when(spyModule.validateStreamName(streamName)).thenReturn(true);
+
+        spyModule.authorizePlay(queryString, userIp, streamName);
+        verify(spyModule).getFilename(streamName);
+    }
+
+    @Test
+    public void authorizePlay_getsDruidFromStreamName()
+    {
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "aa/123/bb/1234/filename.ext";
+        String token = "abcd";
+        SulWowzaFlash spyModule = spy(testModule);
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+        when(spyModule.validateUserIp(userIp)).thenReturn(true);
+        when(spyModule.validateStreamName(streamName)).thenReturn(true);
+
+        spyModule.authorizePlay(queryString, userIp, streamName);
+        verify(spyModule).getDruid(streamName);
+    }
+
+    @Test
+    public void play_getsClientIp()
+    {
+        testModule.invalidConfiguration = false;
+        SulWowzaFlash spyModule = spy(testModule);
+        IClient clientMock = mock(IClient.class);
+        RequestFunction rfMock = mock(RequestFunction.class);
+        AMFDataList amfMock = mock(AMFDataList.class);
+        ApplicationInstance appInstanceMock = mock(ApplicationInstance.class);
+        when(clientMock.getAppInstance()).thenReturn(appInstanceMock);
+        when(appInstanceMock.internalResolvePlayAlias(null, clientMock)).thenReturn("stream.mp4");
+
+        spyModule.play(clientMock, rfMock, amfMock);
+        verify(clientMock).getIp();
     }
 
     @Test
