@@ -91,20 +91,28 @@ public class SulWowzaFlash extends ModuleBase
      */
     public void play(IClient client, RequestFunction function, AMFDataList params)
 	  {
-        String queryString = client.getQueryStr();
-        String clientIP = client.getIp();
-		    String streamName = params.getString(PARAM1);
+        String streamName = params.getString(PARAM1);
 
-		    //get the real stream name if this is an alias.
-		    streamName = ((ApplicationInstance)client.getAppInstance()).internalResolvePlayAlias(streamName, client);
+        //get the real stream name if this is an alias.
+        streamName = ((ApplicationInstance)client.getAppInstance()).internalResolvePlayAlias(streamName, client);
 
-        if (authorizePlay(queryString, clientIP, streamName))
-           this.invokePrevious(client, function, params);
+        if (invalidConfiguration)
+        {
+            getLogger().error(this.getClass().getSimpleName() + " play: rejecting session due to invalid stacksURL property " + streamName);
+            client.shutdownClient();
+        }
         else
         {
-           getLogger().error(this.getClass().getSimpleName() + " play: rejecting due to invalid stacksURL property " + streamName);
-           sendClientOnStatusError((IClient)client, "NetStream.Play.Failed", "Rejected due to invalid token");
-           client.shutdownClient();
+            String queryString = client.getQueryStr();
+            String clientIP = client.getIp();
+
+            if (authorizePlay(queryString, clientIP, streamName))
+              this.invokePrevious(client, function, params);
+            else
+            {
+               sendClientOnStatusError((IClient)client, "NetStream.Play.Failed", "Rejected due to invalid token");
+               client.shutdownClient();
+            }
         }
 	  }
 

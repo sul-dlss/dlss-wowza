@@ -8,11 +8,15 @@ import org.junit.*;
 
 import org.apache.log4j.*;
 
+import com.wowza.wms.amf.AMFDataList;
+import com.wowza.wms.application.ApplicationInstance;
 import com.wowza.wms.application.IApplicationInstance;
 import com.wowza.wms.application.WMSProperties;
+import com.wowza.wms.client.IClient;
 import com.wowza.wms.httpstreamer.cupertinostreaming.httpstreamer.HTTPStreamerSessionCupertino;
 import com.wowza.wms.httpstreamer.model.IHTTPStreamerSession;
 import com.wowza.wms.httpstreamer.mpegdashstreaming.httpstreamer.HTTPStreamerSessionMPEGDash;
+import com.wowza.wms.request.RequestFunction;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -204,6 +208,133 @@ public class TestSulWowzaFlash
 
         verify(sessionMock).rejectSession();
         verify(spyModule, never()).authorizeSession(sessionMock);
+    }
+
+    @Test
+    public void play_shutsDownClient_ifInvalidConfiguration()
+    {
+        testModule.invalidConfiguration = true;
+        SulWowzaFlash spyModule = spy(testModule);
+        IClient clientMock = mock(IClient.class);
+        RequestFunction rfMock = mock(RequestFunction.class);
+        AMFDataList amfMock = mock(AMFDataList.class);
+        ApplicationInstance appInstanceMock = mock(ApplicationInstance.class);
+        when(clientMock.getAppInstance()).thenReturn(appInstanceMock);
+        when(appInstanceMock.internalResolvePlayAlias(null, clientMock)).thenReturn("stream.mp4");
+
+        spyModule.play(clientMock, rfMock, amfMock);
+
+        verify(clientMock).shutdownClient();
+        verify(spyModule, never()).authorizePlay(null, null, "stream.mp4");
+    }
+
+    @Test
+    public void play_calls_AuthorizePlay_ifValidConfiguration()
+    {
+        testModule.invalidConfiguration = false;
+        SulWowzaFlash spyModule = spy(testModule);
+        IClient clientMock = mock(IClient.class);
+        RequestFunction rfMock = mock(RequestFunction.class);
+        AMFDataList amfMock = mock(AMFDataList.class);
+        ApplicationInstance appInstanceMock = mock(ApplicationInstance.class);
+        when(clientMock.getAppInstance()).thenReturn(appInstanceMock);
+        when(appInstanceMock.internalResolvePlayAlias(null, clientMock)).thenReturn("stream.mp4");
+
+        spyModule.play(clientMock, rfMock, amfMock);
+
+        verify(spyModule).authorizePlay(null, null, "stream.mp4");
+    }
+
+    @Test
+    public void authorizePlay_trueIfAuthorized()
+    {
+        String filename = "ignored";
+        String streamName = "oo/000/oo/0000/" + filename;
+        String druid = "oo000oo0000";
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String token = "abcd";
+        SulWowzaFlash spyModule = spy(testModule);
+
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+        when(spyModule.validateUserIp(userIp)).thenReturn(true);
+        when(spyModule.validateStreamName(streamName)).thenReturn(true);
+        when(spyModule.getDruid(streamName)).thenReturn(druid);
+        when(spyModule.getFilename(streamName)).thenReturn(filename);
+        when(spyModule.verifyStacksToken(token, druid, filename, userIp)).thenReturn(true);
+
+        assertEquals(true, spyModule.authorizePlay(queryString, userIp, streamName));
+    }
+
+    @Test
+    public void authorizePlay_falseIfAuthorized()
+    {
+        String filename = "ignored";
+        String streamName = "oo/000/oo/0000/" + filename;
+        String druid = "oo000oo0000";
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String token = "abcd";
+        SulWowzaFlash spyModule = spy(testModule);
+
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+        when(spyModule.validateUserIp(userIp)).thenReturn(true);
+        when(spyModule.validateStreamName(streamName)).thenReturn(true);
+        when(spyModule.getDruid(streamName)).thenReturn(druid);
+        when(spyModule.getFilename(streamName)).thenReturn(filename);
+        when(spyModule.verifyStacksToken(token, druid, filename, userIp)).thenReturn(false);
+
+        assertEquals(false, spyModule.authorizePlay(queryString, userIp, streamName));
+    }
+
+    @Test
+    public void authorizePlay_validatesStacksToken()
+    {
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "stream.mp4";
+        String token = "abcd";
+
+        SulWowzaFlash spyModule = spy(testModule);
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+
+        spyModule.authorizePlay(queryString, userIp, streamName);
+        verify(spyModule).validateStacksToken(token);
+    }
+
+    @Test
+    public void authorizePlay_validatesUserIp()
+    {
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "stream.mp4";
+        String token = "abcd";
+
+        SulWowzaFlash spyModule = spy(testModule);
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+
+        spyModule.authorizePlay(queryString, userIp, streamName);
+        verify(spyModule).validateUserIp(userIp);
+    }
+
+    @Test
+    public void authorizePlay_validatesStreamName()
+    {
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "stream.mp4";
+        String token = "abcd";
+
+        SulWowzaFlash spyModule = spy(testModule);
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+        when(spyModule.validateUserIp(userIp)).thenReturn(true);
+
+        spyModule.authorizePlay(queryString, userIp, streamName);
+        verify(spyModule).validateStreamName(streamName);
     }
 
     @Test
