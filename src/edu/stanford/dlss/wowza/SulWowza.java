@@ -359,9 +359,17 @@ public class SulWowza extends ModuleBase
     String getFilename(String streamName)
     {
         String myStreamName = streamName;
-        if (streamName.indexOf('?') > 0)
-            myStreamName = streamName.substring(0, streamName.indexOf('?'));
+        // remove query string suffix if present
+        int questionMarkIndex = streamName.indexOf('?');
+        if (questionMarkIndex > 0)
+            myStreamName = streamName.substring(0, questionMarkIndex);
+
         String filename = myStreamName.substring(myStreamName.lastIndexOf('/') + 1);
+        // remove protocol prefix if present
+        int colonIndex = filename.indexOf(':');
+        if (colonIndex > 0)
+            filename = filename.substring(colonIndex + 1);
+
         if (filename.length() > 0)
             return filename;
         else

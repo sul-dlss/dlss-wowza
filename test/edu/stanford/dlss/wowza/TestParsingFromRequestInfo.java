@@ -94,10 +94,21 @@ public class TestParsingFromRequestInfo
     }
 
     @Test
+    public void getFilenameWhenProtocol()
+    {
+        assertEquals("stream.mp4", testModule.getFilename("oo/00/oo/0000/mp4:stream.mp4"));
+        assertEquals("anything.without%slash", testModule.getFilename("a/b/c/d/mp3:anything.without%slash"));
+        assertNull(testModule.getFilename("a/b/c/d/mp3:"));
+    }
+
+    @Test
     public void getFilenameWhenQueryParams()
     {
         assertEquals("stream.mp4", testModule.getFilename("oo/00/oo/0000/stream.mp4?" + queryStr));
+        assertEquals("stream.mp4", testModule.getFilename("oo/00/oo/0000/mp4:stream.mp4?" + queryStr));
         assertEquals("anything.without%slash", testModule.getFilename("a/b/c/d/anything.without%slash?" + queryStr));
+        assertEquals("anything.without%slash", testModule.getFilename("a/b/c/d/mp3:anything.without%slash?" + queryStr));
         assertNull(testModule.getFilename("a/b/c/d/?" + queryStr));
+        assertNull(testModule.getFilename("a/b/c/d/mp3:?" + queryStr));
     }
 }
