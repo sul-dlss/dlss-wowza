@@ -42,7 +42,7 @@ public class SulWowzaFlash extends ModuleBase
         try
         {
             new URL(stacksTokenVerificationBaseUrl);
-            getLogger().info(this.getClass().getSimpleName() + "stacksURL is " + stacksTokenVerificationBaseUrl);
+            getLogger().info(this.getClass().getSimpleName() + " stacksURL is " + stacksTokenVerificationBaseUrl);
         }
         catch (MalformedURLException e)
         {
@@ -110,6 +110,7 @@ public class SulWowzaFlash extends ModuleBase
               this.invokePrevious(client, function, params);
             else
             {
+               getLogger().error(this.getClass().getSimpleName() + " failed to authorize streamName " + streamName + ", queryStr " + queryString);
                sendClientOnStatusError(client, "NetStream.Play.Failed", "Rejected due to invalid token");
                client.shutdownClient();
             }
