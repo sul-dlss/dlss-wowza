@@ -355,7 +355,10 @@ public class SulWowza extends ModuleBase
      * Assumption:  validateStreamName() was already called */
     String getFilename(String streamName)
     {
-        String filename = streamName.substring(streamName.lastIndexOf('/') + 1);
+        String myStreamName = streamName;
+        if (streamName.indexOf('?') > 0)
+            myStreamName = streamName.substring(0, streamName.indexOf('?'));
+        String filename = myStreamName.substring(myStreamName.lastIndexOf('/') + 1);
         if (filename.length() > 0)
             return filename;
         else

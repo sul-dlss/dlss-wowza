@@ -742,55 +742,6 @@ public class TestSulWowza
     }
 
     @Test
-    public void getStacksToken_singleParam()
-    {
-        assertEquals(stacksToken, testModule.getStacksToken(queryStr));
-    }
-
-    @Test
-    public void getStacksToken_ignoresOtherParams()
-    {
-        String myQueryStr = "ignored=ignored&stacks_token=" + stacksToken + "&anything=anythingElse";
-        assertEquals(stacksToken, testModule.getStacksToken(myQueryStr));
-    }
-
-    @Test
-    public void getStacksToken_emptyTokenParam()
-    {
-        String myQueryStr = "ignored=ignored&stacks_token=&anything=anythingElse";
-        assertEquals("", testModule.getStacksToken(myQueryStr));
-    }
-
-    @Test
-    public void getStacksToken_missingTokenParam()
-    {
-        String myQueryStr = "ignored=ignored&anything=anythingElse";
-        assertNull(testModule.getStacksToken(myQueryStr));
-    }
-
-    @Test
-    public void getStacksToken_emptyQueryStr()
-    {
-        assertNull(testModule.getStacksToken(""));
-    }
-
-    @Test
-    public void getStacksToken_nullQueryStr()
-    {
-        SulWowza testModule = new SulWowza();
-        assertNull(testModule.getStacksToken(null));
-    }
-
-    //@Test
-    public void getStacksToken_weirdChars()
-    {
-        // stacks provides a token that theoretically could have chars needing url encoding
-        //  does our code get those chars properly?
-        //  does it properly send them back to stacks/verify_token ?
-        fail("what if stacks tokens have chars that are utf-8 or need to be url encoded?");
-    }
-
-    @Test
     public void validateStacksToken_goodEnough()
     {
         assertTrue(testModule.validateStacksToken(stacksToken));
@@ -949,24 +900,6 @@ public class TestSulWowza
         {
             logger.removeAppender(appender);
         }
-    }
-
-    @Test
-    public void getDruid()
-    {
-        assertEquals("oo000oo0000", testModule.getDruid("oo/000/oo/0000/stream.mp4")); // oo000oo000 has valid druid format
-        assertEquals("oo000oo0000", testModule.getDruid("oo/000/oo/0000/a"));
-        assertNull(testModule.getDruid("oo/00/oo/0000/"));  // oo00oo0000 is not a valid druid format
-        assertNull(testModule.getDruid("a/b/c/d/anything.without%slash"));  // abcd is not a valid druid format
-        assertNull(testModule.getDruid("a/b/c/d/"));
-    }
-
-    @Test
-    public void getFilename()
-    {
-        assertEquals("stream.mp4", testModule.getFilename("oo/00/oo/0000/stream.mp4"));
-        assertEquals("anything.without%slash", testModule.getFilename("a/b/c/d/anything.without%slash"));
-        assertNull(testModule.getFilename("a/b/c/d/"));
     }
 
     @Test
