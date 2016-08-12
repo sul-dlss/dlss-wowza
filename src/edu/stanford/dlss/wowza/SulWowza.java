@@ -105,6 +105,9 @@ public class SulWowza extends ModuleBase
         else
         {
             String queryString = client.getQueryStr();
+            // we've empirically observed that the query string is coming over in the streamName, at least some of the time
+            if (queryString == null || queryString.length() == 0)
+                queryString = streamName;
             String clientIP = client.getIp();
 
             if (authorizePlay(queryString, clientIP, streamName))

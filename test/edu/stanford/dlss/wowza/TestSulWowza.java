@@ -220,12 +220,11 @@ public class TestSulWowza
         AMFDataList amfMock = mock(AMFDataList.class);
         ApplicationInstance appInstanceMock = mock(ApplicationInstance.class);
         when(clientMock.getAppInstance()).thenReturn(appInstanceMock);
-        when(appInstanceMock.internalResolvePlayAlias(null, clientMock)).thenReturn("stream.mp4");
+        when(appInstanceMock.internalResolvePlayAlias(null, clientMock)).thenReturn("streamName");
 
         spyModule.play(clientMock, rfMock, amfMock);
-
         verify(clientMock).shutdownClient();
-        verify(spyModule, never()).authorizePlay(null, null, "stream.mp4");
+        verify(spyModule, never()).authorizePlay(null, null, "streamName");
     }
 
     @Test
@@ -238,11 +237,45 @@ public class TestSulWowza
         AMFDataList amfMock = mock(AMFDataList.class);
         ApplicationInstance appInstanceMock = mock(ApplicationInstance.class);
         when(clientMock.getAppInstance()).thenReturn(appInstanceMock);
-        when(appInstanceMock.internalResolvePlayAlias(null, clientMock)).thenReturn("stream.mp4");
+        when(appInstanceMock.internalResolvePlayAlias(null, clientMock)).thenReturn("streamName");
+        when(clientMock.getQueryStr()).thenReturn("queryStr");
 
         spyModule.play(clientMock, rfMock, amfMock);
+        verify(spyModule).authorizePlay("queryStr", null, "streamName");
+    }
 
-        verify(spyModule).authorizePlay(null, null, "stream.mp4");
+    @Test
+    public void play_getsClientIp()
+    {
+        testModule.invalidConfiguration = false;
+        SulWowza spyModule = spy(testModule);
+        IClient clientMock = mock(IClient.class);
+        RequestFunction rfMock = mock(RequestFunction.class);
+        AMFDataList amfMock = mock(AMFDataList.class);
+        ApplicationInstance appInstanceMock = mock(ApplicationInstance.class);
+        when(clientMock.getAppInstance()).thenReturn(appInstanceMock);
+        when(appInstanceMock.internalResolvePlayAlias(null, clientMock)).thenReturn("streamName");
+
+        spyModule.play(clientMock, rfMock, amfMock);
+        verify(clientMock).getIp();
+    }
+
+    @Test
+    public void play_usesStreamNameIfNoStacksTokenFromQueryStr()
+    {
+        String streamName = "oo/000/oo/0000/stream.mp4?queryStr";
+        testModule.invalidConfiguration = false;
+        SulWowza spyModule = spy(testModule);
+        IClient clientMock = mock(IClient.class);
+        RequestFunction rfMock = mock(RequestFunction.class);
+        AMFDataList amfMock = mock(AMFDataList.class);
+        ApplicationInstance appInstanceMock = mock(ApplicationInstance.class);
+        when(clientMock.getAppInstance()).thenReturn(appInstanceMock);
+        when(appInstanceMock.internalResolvePlayAlias(null, clientMock)).thenReturn(streamName);
+        when(spyModule.getStacksToken(anyString())).thenReturn(null);
+
+        spyModule.play(clientMock, rfMock, amfMock);
+        verify(spyModule).authorizePlay(streamName, null, streamName);
     }
 
     @Test
@@ -420,22 +453,6 @@ public class TestSulWowza
 
         spyModule.authorizePlay(queryString, userIp, streamName);
         verify(spyModule).getDruid(streamName);
-    }
-
-    @Test
-    public void play_getsClientIp()
-    {
-        testModule.invalidConfiguration = false;
-        SulWowza spyModule = spy(testModule);
-        IClient clientMock = mock(IClient.class);
-        RequestFunction rfMock = mock(RequestFunction.class);
-        AMFDataList amfMock = mock(AMFDataList.class);
-        ApplicationInstance appInstanceMock = mock(ApplicationInstance.class);
-        when(clientMock.getAppInstance()).thenReturn(appInstanceMock);
-        when(appInstanceMock.internalResolvePlayAlias(null, clientMock)).thenReturn("stream.mp4");
-
-        spyModule.play(clientMock, rfMock, amfMock);
-        verify(clientMock).getIp();
     }
 
     @Test
