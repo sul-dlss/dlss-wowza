@@ -98,7 +98,7 @@ public class SulWowzaFlash extends ModuleBase
 
         if (invalidConfiguration)
         {
-            getLogger().error(this.getClass().getSimpleName() + " play: rejecting session due to invalid stacksURL property " + streamName);
+            getLogger().error(this.getClass().getSimpleName() + " play: rejecting due to invalid stacksURL property (" + stacksTokenVerificationBaseUrl + "); streamName:  " + streamName);
             client.shutdownClient();
         }
         else
@@ -110,7 +110,7 @@ public class SulWowzaFlash extends ModuleBase
               this.invokePrevious(client, function, params);
             else
             {
-               sendClientOnStatusError((IClient)client, "NetStream.Play.Failed", "Rejected due to invalid token");
+               sendClientOnStatusError(client, "NetStream.Play.Failed", "Rejected due to invalid token");
                client.shutdownClient();
             }
         }
