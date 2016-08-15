@@ -25,8 +25,8 @@ import java.util.Map;
 public class TestSulWowza
 {
     SulWowza testModule;
-    static String stacksToken = "encryptedStacksMediaToken";
-    static String queryStr = "stacks_token=" + stacksToken;
+    final static String stacksToken = "encryptedStacksMediaToken";
+    final static String queryStr = "stacks_token=" + stacksToken;
 
     @Before
     public void setUp()
