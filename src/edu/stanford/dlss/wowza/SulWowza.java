@@ -12,18 +12,21 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.commons.validator.routines.InetAddressValidator;
 import com.google.common.escape.Escaper;
 import com.google.common.net.PercentEscaper;
+import com.wowza.wms.amf.AMFDataList;
+import com.wowza.wms.application.ApplicationInstance;
 import com.wowza.wms.application.IApplicationInstance;
+import com.wowza.wms.client.IClient;
 import com.wowza.wms.httpstreamer.cupertinostreaming.httpstreamer.HTTPStreamerSessionCupertino;
 import com.wowza.wms.httpstreamer.model.IHTTPStreamerSession;
 import com.wowza.wms.httpstreamer.mpegdashstreaming.httpstreamer.HTTPStreamerSessionMPEGDash;
-import com.wowza.wms.httpstreamer.sanjosestreaming.httpstreamer.HTTPStreamerSessionSanJose;
 import com.wowza.wms.module.ModuleBase;
+import com.wowza.wms.request.RequestFunction;
 
 /** Stanford University Libraries Wowza Plugin Code */
 public class SulWowza extends ModuleBase
 {
-
     static String stacksTokenVerificationBaseUrl;
+    static String stacksUrlErrorMsg = "rejecting due to invalid stacksURL property (" + stacksTokenVerificationBaseUrl + ")";
     static int stacksConnectionTimeout;
     static int stacksReadTimeout;
 
@@ -40,7 +43,7 @@ public class SulWowza extends ModuleBase
         try
         {
             new URL(stacksTokenVerificationBaseUrl);
-            getLogger().info(this.getClass().getSimpleName() + "stacksURL is " + stacksTokenVerificationBaseUrl);
+            getLogger().info(this.getClass().getSimpleName() + " stacksURL is " + stacksTokenVerificationBaseUrl);
         }
         catch (MalformedURLException e)
         {
@@ -56,7 +59,7 @@ public class SulWowza extends ModuleBase
     {
         if (invalidConfiguration)
         {
-            getLogger().error(this.getClass().getSimpleName() + " onHTTPMPEGDashStreamingSessionCreate: rejecting session due to invalid stacksURL property " + httpSession.getStreamName());
+            getLogger().error(this.getClass().getSimpleName() + " onHTTPMPEGDashStreamingSessionCreate: " + stacksUrlErrorMsg + "; streamName: " + httpSession.getStreamName());
             httpSession.rejectSession();
         }
         else
@@ -73,7 +76,7 @@ public class SulWowza extends ModuleBase
     {
         if (invalidConfiguration)
         {
-            getLogger().error(this.getClass().getSimpleName() + " onHTTPCupertinoStreamingSessionCreate: rejecting session due to invalid stacksURL property " + httpSession.getStreamName());
+            getLogger().error(this.getClass().getSimpleName() + " onHTTPCupertinoStreamingSessionCreate: " + stacksUrlErrorMsg + "; streamName: " + httpSession.getStreamName());
             httpSession.rejectSession();
         }
         else
@@ -83,22 +86,41 @@ public class SulWowza extends ModuleBase
         }
     }
 
-    /** Invoked when an Adobe HDS streaming session is created (known as San Jose Streaming in Wowza parlance).
-     *  This is an HTTP-based (port 80) streaming protocol for Flash. We currently use this for streaming MP3
-     *  files, since there are no current HLS players that support MP3 across all browsers. */
-    public void onHTTPSanJoseStreamingSessionCreate(HTTPStreamerSessionSanJose httpSession)
-    {
+    /**
+     * Invoked when a media file starts playing. Defined in ModuleCore. This seems to be the only place
+     * we can reliably intercept a Flash connection and get the name of the stream.
+     */
+    public void play(IClient client, RequestFunction function, AMFDataList params)
+	{
+        String streamName = params.getString(PARAM1);
+
+        //get the real stream name if this is an alias.
+        streamName = ((ApplicationInstance)client.getAppInstance()).internalResolvePlayAlias(streamName, client);
+
         if (invalidConfiguration)
         {
-            getLogger().error(this.getClass().getSimpleName() + " onHTTPSanJoseinoStreamingSessionCreate: rejecting session due to invalid stacksURL property " + httpSession.getStreamName());
-            httpSession.rejectSession();
+            getLogger().error(this.getClass().getSimpleName() + " play: " + stacksUrlErrorMsg + "; streamName:  " + streamName);
+            client.shutdownClient();
         }
         else
         {
-          getLogger().info(this.getClass().getSimpleName() + " onHTTPSanJoseStreamingSessionCreate: " + httpSession.getStreamName());
-          authorizeSession(httpSession);
+            String queryString = client.getQueryStr();
+            // we've empirically observed that the query string is coming over in the streamName, at least some of the time
+            if (queryString == null || queryString.length() == 0)
+                queryString = streamName;
+            String clientIP = client.getIp();
+
+            if (authorizePlay(queryString, clientIP, streamName))
+                this.invokePrevious(client, function, params);
+            else
+            {
+                getLogger().error(this.getClass().getSimpleName() + " failed to authorize streamName " + streamName + ", queryStr " + queryString);
+                sendClientOnStatusError(client, "NetStream.Play.Failed", "Rejected due to invalid token");
+                client.shutdownClient();
+            }
         }
-    }
+	}
+
 
     // --------------------------------- the public API is above this line ----------------------------------------
 
@@ -206,6 +228,25 @@ public class SulWowza extends ModuleBase
         }
         else
             httpSession.rejectSession();
+    }
+
+    boolean authorizePlay(String queryStr, String userIp, String streamName)
+    {
+        String stacksToken = getStacksToken(queryStr);
+        if (validateStacksToken(stacksToken) && validateUserIp(userIp) && validateStreamName(streamName))
+        {
+            String druid = getDruid(streamName);
+            String filename = getFilename(streamName);
+
+            getLogger().debug(this.getClass().getSimpleName() + " userIp: " + userIp);
+            getLogger().debug(this.getClass().getSimpleName() + " streamName: " + streamName);
+            if (druid != null && filename != null && verifyStacksToken(stacksToken, druid, filename, userIp))
+                return true;
+            else
+                return false;
+        }
+        else
+            return false;
     }
 
     /** Assumption: stacksToken, druid, userIp and filename are all reasonable values (non-null, not empty, etc.) */
@@ -317,7 +358,18 @@ public class SulWowza extends ModuleBase
      * Assumption:  validateStreamName() was already called */
     String getFilename(String streamName)
     {
-        String filename = streamName.substring(streamName.lastIndexOf('/') + 1);
+        String myStreamName = streamName;
+        // remove query string suffix if present
+        int questionMarkIndex = streamName.indexOf('?');
+        if (questionMarkIndex > 0)
+            myStreamName = streamName.substring(0, questionMarkIndex);
+
+        String filename = myStreamName.substring(myStreamName.lastIndexOf('/') + 1);
+        // remove protocol prefix if present
+        int colonIndex = filename.indexOf(':');
+        if (colonIndex > 0)
+            filename = filename.substring(colonIndex + 1);
+
         if (filename.length() > 0)
             return filename;
         else

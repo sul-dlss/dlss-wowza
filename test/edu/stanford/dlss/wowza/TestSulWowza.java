@@ -8,26 +8,25 @@ import org.junit.*;
 
 import org.apache.log4j.*;
 
+import com.wowza.wms.amf.AMFDataList;
+import com.wowza.wms.application.ApplicationInstance;
 import com.wowza.wms.application.IApplicationInstance;
 import com.wowza.wms.application.WMSProperties;
+import com.wowza.wms.client.IClient;
 import com.wowza.wms.httpstreamer.cupertinostreaming.httpstreamer.HTTPStreamerSessionCupertino;
 import com.wowza.wms.httpstreamer.model.IHTTPStreamerSession;
 import com.wowza.wms.httpstreamer.mpegdashstreaming.httpstreamer.HTTPStreamerSessionMPEGDash;
-import com.wowza.wms.httpstreamer.sanjosestreaming.httpstreamer.HTTPStreamerSessionSanJose;
+import com.wowza.wms.request.RequestFunction;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
 public class TestSulWowza
 {
     SulWowza testModule;
-    static String stacksToken = "encryptedStacksMediaToken";
-    static String queryStr = "stacks_token=" + stacksToken;
+    final static String stacksToken = "encryptedStacksMediaToken";
+    final static String queryStr = "stacks_token=" + stacksToken;
 
     @Before
     public void setUp()
@@ -208,26 +207,71 @@ public class TestSulWowza
     }
 
     @Test
-    public void onHTTPSanJoseStreamingSessionCreate_calls_authorizeSession_ifValidConfiguration()
-    {
-        SulWowza spyModule = spy(testModule);
-        HTTPStreamerSessionSanJose sessionMock = mock(HTTPStreamerSessionSanJose.class);
-        spyModule.invalidConfiguration = false;
-        spyModule.onHTTPSanJoseStreamingSessionCreate(sessionMock);
-
-        verify(spyModule).authorizeSession(sessionMock);
-    }
-
-    @Test
-    public void onHTTPSanJoseStreamingSessionCreate_rejectsSession_ifInvalidConfiguration()
+    public void play_shutsDownClient_ifInvalidConfiguration()
     {
         testModule.invalidConfiguration = true;
         SulWowza spyModule = spy(testModule);
-        HTTPStreamerSessionSanJose sessionMock = mock(HTTPStreamerSessionSanJose.class);
-        spyModule.onHTTPSanJoseStreamingSessionCreate(sessionMock);
+        IClient clientMock = mock(IClient.class);
+        RequestFunction rfMock = mock(RequestFunction.class);
+        AMFDataList amfMock = mock(AMFDataList.class);
+        ApplicationInstance appInstanceMock = mock(ApplicationInstance.class);
+        when(clientMock.getAppInstance()).thenReturn(appInstanceMock);
+        when(appInstanceMock.internalResolvePlayAlias(null, clientMock)).thenReturn("streamName");
 
-        verify(sessionMock).rejectSession();
-        verify(spyModule, never()).authorizeSession(sessionMock);
+        spyModule.play(clientMock, rfMock, amfMock);
+        verify(clientMock).shutdownClient();
+        verify(spyModule, never()).authorizePlay(null, null, "streamName");
+    }
+
+    @Test
+    public void play_calls_AuthorizePlay_ifValidConfiguration()
+    {
+        testModule.invalidConfiguration = false;
+        SulWowza spyModule = spy(testModule);
+        IClient clientMock = mock(IClient.class);
+        RequestFunction rfMock = mock(RequestFunction.class);
+        AMFDataList amfMock = mock(AMFDataList.class);
+        ApplicationInstance appInstanceMock = mock(ApplicationInstance.class);
+        when(clientMock.getAppInstance()).thenReturn(appInstanceMock);
+        when(appInstanceMock.internalResolvePlayAlias(null, clientMock)).thenReturn("streamName");
+        when(clientMock.getQueryStr()).thenReturn("queryStr");
+
+        spyModule.play(clientMock, rfMock, amfMock);
+        verify(spyModule).authorizePlay("queryStr", null, "streamName");
+    }
+
+    @Test
+    public void play_getsClientIp()
+    {
+        testModule.invalidConfiguration = false;
+        SulWowza spyModule = spy(testModule);
+        IClient clientMock = mock(IClient.class);
+        RequestFunction rfMock = mock(RequestFunction.class);
+        AMFDataList amfMock = mock(AMFDataList.class);
+        ApplicationInstance appInstanceMock = mock(ApplicationInstance.class);
+        when(clientMock.getAppInstance()).thenReturn(appInstanceMock);
+        when(appInstanceMock.internalResolvePlayAlias(null, clientMock)).thenReturn("streamName");
+
+        spyModule.play(clientMock, rfMock, amfMock);
+        verify(clientMock).getIp();
+    }
+
+    @Test
+    public void play_usesStreamNameIfNoStacksTokenFromQueryStr()
+    {
+        String streamName = "oo/000/oo/0000/stream.mp4?queryStr";
+        testModule.invalidConfiguration = false;
+        SulWowza spyModule = spy(testModule);
+        IClient clientMock = mock(IClient.class);
+        RequestFunction rfMock = mock(RequestFunction.class);
+        AMFDataList amfMock = mock(AMFDataList.class);
+        ApplicationInstance appInstanceMock = mock(ApplicationInstance.class);
+        when(clientMock.getAppInstance()).thenReturn(appInstanceMock);
+        when(appInstanceMock.internalResolvePlayAlias(null, clientMock)).thenReturn(streamName);
+        when(spyModule.getStacksToken(anyString())).thenReturn(null);
+
+        spyModule.play(clientMock, rfMock, amfMock);
+        verify(spyModule).authorizePlay(streamName, null, streamName);
     }
 
     @Test
@@ -500,481 +544,179 @@ public class TestSulWowza
     }
 
     @Test
-    /** verifyStacksToken calls getVerifyStacksTokenUrl */
-    public void verifyStacksToken_getsVerifyStacksTokenUrl()
+    public void authorizePlay_trueIfAuthorized()
     {
-        SulWowza spyModule = spy(testModule);
-        spyModule.verifyStacksToken(anyString(), anyString(), anyString(), anyString());
-        verify(spyModule).getVerifyStacksTokenUrl(anyString(), anyString(), anyString(), anyString());
-    }
-
-    @Test
-    /** verifyStacksToken calls verifyTokenAgainstStacksService */
-    public void verifyStacksToken_verifiesStacksTokenUrl()
-            throws MalformedURLException
-    {
-        String expUrlStr = SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL + "/media///verify_token?stacks_token=&user_ip=";
-        URL expURL = new URL(expUrlStr);
-        SulWowza spyModule = spy(testModule);
-        when(spyModule.getVerifyStacksTokenUrl(anyString(), anyString(), anyString(), anyString())).thenReturn(expURL);
-
-        spyModule.verifyStacksToken(anyString(), anyString(), anyString(), anyString());
-        verify(spyModule).verifyTokenAgainstStacksService(expURL);
-    }
-
-    @Test
-    /** if the result to getVerifyStacksTokenUrl is null, don't call verifyTokenAgainstStacksService and return false */
-    public void verifyStacksToken_rejectsForNullUrl()
-    {
-        SulWowza spyModule = spy(testModule);
-        when(spyModule.getVerifyStacksTokenUrl(anyString(), anyString(), anyString(), anyString())).thenReturn(null);
-        boolean result = spyModule.verifyStacksToken(anyString(), anyString(), anyString(), anyString());
-        assertFalse(result);
-        verify(spyModule, never()).verifyTokenAgainstStacksService(null);
-    }
-
-    @Test
-    public void getStacksToken_singleParam()
-    {
-        assertEquals(stacksToken, testModule.getStacksToken(queryStr));
-    }
-
-    @Test
-    public void getStacksToken_ignoresOtherParams()
-    {
-        String myQueryStr = "ignored=ignored&stacks_token=" + stacksToken + "&anything=anythingElse";
-        assertEquals(stacksToken, testModule.getStacksToken(myQueryStr));
-    }
-
-    @Test
-    public void getStacksToken_emptyTokenParam()
-    {
-        String myQueryStr = "ignored=ignored&stacks_token=&anything=anythingElse";
-        assertEquals("", testModule.getStacksToken(myQueryStr));
-    }
-
-    @Test
-    public void getStacksToken_missingTokenParam()
-    {
-        String myQueryStr = "ignored=ignored&anything=anythingElse";
-        assertNull(testModule.getStacksToken(myQueryStr));
-    }
-
-    @Test
-    public void getStacksToken_emptyQueryStr()
-    {
-        assertNull(testModule.getStacksToken(""));
-    }
-
-    @Test
-    public void getStacksToken_nullQueryStr()
-    {
-        SulWowza testModule = new SulWowza();
-        assertNull(testModule.getStacksToken(null));
-    }
-
-    //@Test
-    public void getStacksToken_weirdChars()
-    {
-        // stacks provides a token that theoretically could have chars needing url encoding
-        //  does our code get those chars properly?
-        //  does it properly send them back to stacks/verify_token ?
-        fail("what if stacks tokens have chars that are utf-8 or need to be url encoded?");
-    }
-
-    @Test
-    public void validateStacksToken_goodEnough()
-    {
-        assertTrue(testModule.validateStacksToken(stacksToken));
-    }
-
-    @Test
-    public void validateStacksToken_nullValue()
-    {
-        assertFalse(testModule.validateStacksToken(null));
-    }
-
-    @Test
-    public void validateStacksToken_emptyString()
-    {
-        assertFalse(testModule.validateStacksToken(""));
-    }
-
-    @Test
-    public void validateStacksToken_shortString()
-    {
-        assertFalse(testModule.validateStacksToken("too_short"));
-    }
-
-    @Test
-    public void validateStacksToken_logsError()
-    {
-        // logger is the rootLogger, per test/resources/log4j.properties
-        Logger logger = Logger.getRootLogger();
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Layout layout = new SimpleLayout();
-        Appender appender = new WriterAppender(layout, out);
-        logger.addAppender(appender);
-
-        try
-        {
-            String shortToken = "too_short";
-            testModule.validateStacksToken(shortToken);
-            String logMsg = out.toString();
-            assertThat(logMsg, allOf(containsString("ERROR"),
-                                     containsString(testModule.getClass().getSimpleName()),
-                                     containsString(" stacksToken missing or implausibly short: "),
-                                     containsString(shortToken)));
-        }
-        finally
-        {
-            logger.removeAppender(appender);
-        }
-    }
-
-    @Test
-    public void validateUserIp_goodEnough()
-    {
-        assertTrue(testModule.validateUserIp("1.1.1.1"));
-    }
-
-    @Test
-    public void validateUserIp_nullValue()
-    {
-        assertFalse(testModule.validateUserIp(null));
-    }
-
-    @Test
-    public void validateUserIp_emptyString()
-    {
-        assertFalse(testModule.validateUserIp(""));
-    }
-
-    @Test
-    public void validateUserIp_tooFewOctets()
-    {
-        assertFalse(testModule.validateUserIp("1.1.1"));
-    }
-
-    @Test
-    public void validateUserIp_logsError()
-    {
-        // logger is the rootLogger, per test/resources/log4j.properties
-        Logger logger = Logger.getRootLogger();
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Layout layout = new SimpleLayout();
-        Appender appender = new WriterAppender(layout, out);
-        logger.addAppender(appender);
-
-        try
-        {
-            String invalidIp = "invalid.ip";
-            testModule.validateUserIp(invalidIp);
-            String logMsg = out.toString();
-            assertThat(logMsg, allOf(containsString("ERROR"),
-                                     containsString(testModule.getClass().getSimpleName()),
-                                     containsString("User IP missing or invalid"),
-                                     containsString(invalidIp)));
-        }
-        finally
-        {
-            logger.removeAppender(appender);
-        }
-    }
-
-    @Test
-    public void validateStreamName_goodEnough()
-    {
-        assertTrue(testModule.validateStreamName("oo/00/oo/0000/filename.ext"));
-    }
-
-    @Test
-    public void validateStreamName_nullValue()
-    {
-        assertFalse(testModule.validateStreamName(null));
-    }
-
-    @Test
-    public void validateStreamName_emptyString()
-    {
-        assertFalse(testModule.validateStreamName(""));
-    }
-
-    @Test
-    public void validateStreamName_shortString()
-    {
-        assertFalse(testModule.validateStreamName("short"));
-    }
-
-    @Test
-    public void validateStreamName_not4Slashes()
-    {
-        assertFalse(testModule.validateStreamName("oo/00/oo/0000/extra/stream.mp4"));
-        assertFalse(testModule.validateStreamName("a/a/a/a/a"));
-        assertFalse(testModule.validateStreamName("stream.mp4"));
-        assertFalse(testModule.validateStreamName("oo/00/oo/0000"));
-        assertFalse(testModule.validateStreamName(""));
-        assertFalse(testModule.validateStreamName(null));
-    }
-
-    @Test
-    public void validateStreamName_logsError()
-    {
-        // logger is the rootLogger, per test/resources/log4j.properties
-        Logger logger = Logger.getRootLogger();
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Layout layout = new SimpleLayout();
-        Appender appender = new WriterAppender(layout, out);
-        logger.addAppender(appender);
-
-        try
-        {
-            String badStreamName = "short";
-            testModule.validateStreamName(badStreamName);
-            String logMsg = out.toString();
-            assertThat(logMsg, allOf(containsString("ERROR"),
-                                     containsString(testModule.getClass().getSimpleName()),
-                                     containsString(" streamName missing or implausibly short: "),
-                                     containsString(badStreamName)));
-        }
-        finally
-        {
-            logger.removeAppender(appender);
-        }
-    }
-
-    @Test
-    public void getDruid()
-    {
-        assertEquals("oo000oo0000", testModule.getDruid("oo/000/oo/0000/stream.mp4")); // oo000oo000 has valid druid format
-        assertEquals("oo000oo0000", testModule.getDruid("oo/000/oo/0000/a"));
-        assertNull(testModule.getDruid("oo/00/oo/0000/"));  // oo00oo0000 is not a valid druid format
-        assertNull(testModule.getDruid("a/b/c/d/anything.without%slash"));  // abcd is not a valid druid format
-        assertNull(testModule.getDruid("a/b/c/d/"));
-    }
-
-    @Test
-    public void getFilename()
-    {
-        assertEquals("stream.mp4", testModule.getFilename("oo/00/oo/0000/stream.mp4"));
-        assertEquals("anything.without%slash", testModule.getFilename("a/b/c/d/anything.without%slash"));
-        assertNull(testModule.getFilename("a/b/c/d/"));
-    }
-
-    @Test
-    public void getVerifyStacksTokenUrl_validUrl()
-    {
-        WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyStr(anyString(), anyString())).thenReturn(SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL);
-        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
-        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
-        testModule.onAppStart(appInstanceMock);
+        String filename = "ignored";
+        String streamName = "oo/000/oo/0000/" + filename;
         String druid = "oo000oo0000";
-        String filename = "filename.ext";
-        String userIp = "0.0.0.0";
-        String expPath = "/media/" + druid + "/" + filename + "/verify_token";
-        String expQueryStr = "?stacks_token=" + stacksToken + "&user_ip=" + userIp;
-        String expUrlStr = SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL + expPath + expQueryStr;
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String token = "abcd";
+        SulWowza spyModule = spy(testModule);
 
-        URL resultUrl = testModule.getVerifyStacksTokenUrl(stacksToken, druid, filename, userIp);
-        assertEquals(expUrlStr, resultUrl.toString());
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+        when(spyModule.validateUserIp(userIp)).thenReturn(true);
+        when(spyModule.validateStreamName(streamName)).thenReturn(true);
+        when(spyModule.getDruid(streamName)).thenReturn(druid);
+        when(spyModule.getFilename(streamName)).thenReturn(filename);
+        when(spyModule.verifyStacksToken(token, druid, filename, userIp)).thenReturn(true);
+
+        assertEquals(true, spyModule.authorizePlay(queryString, userIp, streamName));
     }
 
     @Test
-    public void verifyTokenAgainstStacksService_filenameNeedsEncoding()
+    public void authorizePlay_falseIfNotAuthorized()
     {
-        WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyStr(anyString(), anyString())).thenReturn(SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL);
-        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
-        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
-        testModule.onAppStart(appInstanceMock);
+        String filename = "ignored";
+        String streamName = "oo/000/oo/0000/" + filename;
         String druid = "oo000oo0000";
-        String filename = "{([special-chars])}: ü@?;=&#$%20^*.|-_+!,~'/\"`";
-        String userIp = "0.0.0.0";
-        // specifically list the expected encodings, as we've run into trouble with encoding methods that were encoding in unexpected ways
-        String encodedFilename = "%7B%28%5Bspecial-chars%5D%29%7D%3A%20%C3%BC%40%3F%3B%3D%26%23%24%2520%5E%2A.%7C-_%2B%21%2C~%27%2F%22%60";
-        String expPath = "/media/" + druid + "/" + encodedFilename + "/verify_token";
-        String expQueryStr = "?stacks_token=" + stacksToken + "&user_ip=" + userIp;
-        String expUrlStr = SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL + expPath + expQueryStr;
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String token = "abcd";
+        SulWowza spyModule = spy(testModule);
 
-        URL resultUrl = testModule.getVerifyStacksTokenUrl(stacksToken, druid, filename, userIp);
-        assertEquals(expUrlStr, resultUrl.toString());
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+        when(spyModule.validateUserIp(userIp)).thenReturn(true);
+        when(spyModule.validateStreamName(streamName)).thenReturn(true);
+        when(spyModule.getDruid(streamName)).thenReturn(druid);
+        when(spyModule.getFilename(streamName)).thenReturn(filename);
+        when(spyModule.verifyStacksToken(token, druid, filename, userIp)).thenReturn(false);
+
+        assertEquals(false, spyModule.authorizePlay(queryString, userIp, streamName));
     }
 
     @Test
-    public void verifyTokenAgainstStacksService_stacksTokenNeedsEncoding()
+    public void authorizePlay_validatesStacksToken()
     {
-        WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyStr(anyString(), anyString())).thenReturn(SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL);
-        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
-        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
-        testModule.onAppStart(appInstanceMock);
-        String druid = "oo000oo0000";
-        String filename = "filename.ext";
-        String userIp = "0.0.0.0";
-        String expPath = "/media/" + druid + "/" + filename + "/verify_token";
-        String stacksTokenWithWeirdChars = "{([special-chars])}: ü@?;=&#$%20^*.|-_+!,~'/\"`";
-        // specifically list the expected encodings, as we've run into trouble with encoding methods that were encoding in unexpected ways
-        String encodedToken = "%7B%28%5Bspecial-chars%5D%29%7D%3A+%C3%BC%40%3F%3B%3D%26%23%24%2520%5E%2A.%7C-_%2B%21%2C~%27%2F%22%60";
-        String expQueryStr = "?stacks_token=" + encodedToken + "&user_ip=" + userIp;
-        String expUrlStr = SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL + expPath + expQueryStr;
-
-        URL resultUrl = testModule.getVerifyStacksTokenUrl(stacksTokenWithWeirdChars, druid, filename, userIp);
-        assertEquals(expUrlStr, resultUrl.toString());
-    }
-
-    @Test
-    /** expect it to return null and log an error message */
-    public void getVerifyStacksTokenUrl_malformedUrl()
-    {
-        WMSProperties mockProperties = mock(WMSProperties.class);
-        when(mockProperties.getPropertyStr(anyString(), anyString())).thenReturn("badUrl");
-        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
-        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
-        testModule.onAppStart(appInstanceMock);
-
-        // logger is the rootLogger, per test/resources/log4j.properties
-        Logger logger = Logger.getRootLogger();
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Layout layout = new SimpleLayout();
-        Appender appender = new WriterAppender(layout, out);
-        logger.addAppender(appender);
-
-        try
-        {
-            URL resultUrl = testModule.getVerifyStacksTokenUrl(stacksToken, "oo000oo0000", "filename.ext", "0.0.0.0");
-            assertNull(resultUrl);
-            String logMsg = out.toString();
-            assertThat(logMsg, allOf(containsString("ERROR"),
-                                     containsString(" bad URL for stacks_token verification:"),
-                                     containsString(" java.net.MalformedURLException"),
-                                     containsString(" no protocol")));
-        }
-        finally
-        {
-            logger.removeAppender(appender);
-        }
-    }
-
-    @Test
-    /** returns true and logs request made */
-    public void verifyTokenAgainstStacksService_getsStacksHttpURLConn()
-            throws IOException
-    {
-        String expPath = "/media/oo000oo0000/filename.ext/verify_token";
-        String expQueryStr = "?stacks_token=" + stacksToken + "&user_ip=0.0.0.0";
-        String urlStr = "http://localhost:3000" + expPath + expQueryStr;
-        URL stacksURL = new URL(urlStr);
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "stream.mp4";
+        String token = "abcd";
 
         SulWowza spyModule = spy(testModule);
-        spyModule.verifyTokenAgainstStacksService(stacksURL);
-        verify(spyModule).getStacksHttpURLConn(stacksURL, "HEAD");
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateUserIp("1")).thenReturn(true);
+
+        spyModule.authorizePlay(queryString, userIp, streamName);
+        verify(spyModule).validateStacksToken(token);
     }
 
     @Test
-    /** returns true and logs request made */
-    public void verifyTokenAgainstStacksService_HTTP_OK()
-            throws IOException
+    public void authorizePlay_validatesUserIp()
     {
-        String expPath = "/media/oo000oo0000/filename.ext/verify_token";
-        String expQueryStr = "?stacks_token=" + stacksToken + "&user_ip=0.0.0.0";
-        String urlStr = "http://localhost:3000" + expPath + expQueryStr;
-        URL stacksURL = new URL(urlStr);
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "stream.mp4";
+        String token = "abcd";
 
-        // logger is the rootLogger, per test/resources/log4j.properties
-        Logger logger = Logger.getRootLogger();
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Layout layout = new SimpleLayout();
-        Appender appender = new WriterAppender(layout, out);
-        logger.addAppender(appender);
+        SulWowza spyModule = spy(testModule);
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
 
-        try
-        {
-            SulWowza spyModule = spy(testModule);
-            HttpURLConnection mockStacksConn = mock(HttpURLConnection.class);
-            when(spyModule.getStacksHttpURLConn(stacksURL, "HEAD")).thenReturn(mockStacksConn);
-            when(mockStacksConn.getResponseCode()).thenReturn(HttpURLConnection.HTTP_OK);
-            assertTrue(spyModule.verifyTokenAgainstStacksService(stacksURL));
-            String logMsg = out.toString();
-            assertThat(logMsg, allOf(containsString("INFO"),
-                                     containsString(testModule.getClass().getSimpleName()),
-                                     containsString("sent verify_token request to"),
-                                     containsString(urlStr)));
-        }
-        finally
-        {
-            logger.removeAppender(appender);
-        }
+        spyModule.authorizePlay(queryString, userIp, streamName);
+        verify(spyModule).validateUserIp(userIp);
     }
 
     @Test
-    /** returns false and logs request made */
-    public void verifyTokenAgainstStacksService_HTTP_FORBIDDEN()
-            throws IOException
+    public void authorizePlay_validatesStreamName()
     {
-        String expPath = "/media/oo000oo0000/filename.ext/verify_token";
-        String expQueryStr = "?stacks_token=" + stacksToken + "&user_ip=0.0.0.0";
-        String urlStr = "http://localhost:3000" + expPath + expQueryStr;
-        URL stacksURL = new URL(urlStr);
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "stream.mp4";
+        String token = "abcd";
 
-        // logger is the rootLogger, per test/resources/log4j.properties
-        Logger logger = Logger.getRootLogger();
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Layout layout = new SimpleLayout();
-        Appender appender = new WriterAppender(layout, out);
-        logger.addAppender(appender);
+        SulWowza spyModule = spy(testModule);
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+        when(spyModule.validateUserIp(userIp)).thenReturn(true);
 
-        try
-        {
-            SulWowza spyModule = spy(testModule);
-            HttpURLConnection mockStacksConn = mock(HttpURLConnection.class);
-            when(spyModule.getStacksHttpURLConn(stacksURL, "HEAD")).thenReturn(mockStacksConn);
-            when(mockStacksConn.getResponseCode()).thenReturn(HttpURLConnection.HTTP_FORBIDDEN);
-            assertFalse(spyModule.verifyTokenAgainstStacksService(stacksURL));
-            String logMsg = out.toString();
-            assertThat(logMsg, allOf(containsString("INFO"),
-                                     containsString(testModule.getClass().getSimpleName()),
-                                     containsString("sent verify_token request to"),
-                                     containsString(urlStr)));
-        }
-        finally
-        {
-            logger.removeAppender(appender);
-        }
+        spyModule.authorizePlay(queryString, userIp, streamName);
+        verify(spyModule).validateStreamName(streamName);
     }
 
     @Test
-    /** it logs an error and returns false */
-    public void verifyTokenAgainstStacksService_wException()
-            throws MalformedURLException
+    public void authorizePlay_falseIfNullDruid()
     {
-        String expPath = "/media/oo000oo0000/filename.ext/verify_token";
-        String expQueryStr = "?stacks_token=" + stacksToken + "&user_ip=0.0.0.0";
-        String urlStr = "http://localhost:6666" + expPath + expQueryStr;
-        URL stacksURL = new URL(urlStr);
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "aa/123/bb/1234/filename.ext";
+        String token = "abcd";
 
-        // logger is the rootLogger, per test/resources/log4j.properties
-        Logger logger = Logger.getRootLogger();
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Layout layout = new SimpleLayout();
-        Appender appender = new WriterAppender(layout, out);
-        logger.addAppender(appender);
+        SulWowza spyModule = spy(testModule);
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+        when(spyModule.validateUserIp(userIp)).thenReturn(true);
+        when(spyModule.validateStreamName(streamName)).thenReturn(true);
+        when(spyModule.getDruid(streamName)).thenReturn(null);
 
-        try
-        {
-            boolean result = testModule.verifyTokenAgainstStacksService(stacksURL);
-            assertFalse(result);
-            String logMsg = out.toString();
-            assertThat(logMsg, allOf(containsString("ERROR"),
-                                     containsString(testModule.getClass().getSimpleName()),
-                                     containsString("unable to verify stacks token at"),
-                                     containsString(urlStr),
-                                     containsString("Exception")));
-        }
-        finally
-        {
-            logger.removeAppender(appender);
-        }
+        assertEquals(false, spyModule.authorizePlay(queryString, userIp, streamName));
+        verify(spyModule, never()).verifyStacksToken(anyString(), anyString(), anyString(), anyString());
     }
 
+    @Test
+    public void authorizePlay_falseIfNullFilename()
+    {
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "aa/123/bb/1234/filename.ext";
+        String token = "abcd";
+
+        SulWowza spyModule = spy(testModule);
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+        when(spyModule.validateUserIp(userIp)).thenReturn(true);
+        when(spyModule.validateStreamName(streamName)).thenReturn(true);
+        when(spyModule.getFilename(streamName)).thenReturn(null);
+
+        assertEquals(false, spyModule.authorizePlay(queryString, userIp, streamName));
+        verify(spyModule, never()).verifyStacksToken(anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    public void authorizePlay_getsStacksToken()
+    {
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "aa/123/bb/1234/filename.ext";
+
+        SulWowza spyModule = spy(testModule);
+        spyModule.authorizePlay(queryString, userIp, streamName);
+        verify(spyModule).getStacksToken(queryString);
+    }
+
+    @Test
+    public void authorizePlay_getsFilenameFromStreamName()
+    {
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "aa/123/bb/1234/filename.ext";
+        String token = "abcd";
+        SulWowza spyModule = spy(testModule);
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+        when(spyModule.validateUserIp(userIp)).thenReturn(true);
+        when(spyModule.validateStreamName(streamName)).thenReturn(true);
+
+        spyModule.authorizePlay(queryString, userIp, streamName);
+        verify(spyModule).getFilename(streamName);
+    }
+
+    @Test
+    public void authorizePlay_getsDruidFromStreamName()
+    {
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "aa/123/bb/1234/filename.ext";
+        String token = "abcd";
+        SulWowza spyModule = spy(testModule);
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+        when(spyModule.validateUserIp(userIp)).thenReturn(true);
+        when(spyModule.validateStreamName(streamName)).thenReturn(true);
+
+        spyModule.authorizePlay(queryString, userIp, streamName);
+        verify(spyModule).getDruid(streamName);
+    }
 }
