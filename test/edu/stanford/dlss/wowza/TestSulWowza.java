@@ -275,183 +275,6 @@ public class TestSulWowza
     }
 
     @Test
-    public void authorizePlay_trueIfAuthorized()
-    {
-        String filename = "ignored";
-        String streamName = "oo/000/oo/0000/" + filename;
-        String druid = "oo000oo0000";
-        String queryString = "query";
-        String userIp = "1.1.1.1";
-        String token = "abcd";
-        SulWowza spyModule = spy(testModule);
-
-        when(spyModule.getStacksToken(queryString)).thenReturn(token);
-        when(spyModule.validateStacksToken(token)).thenReturn(true);
-        when(spyModule.validateUserIp(userIp)).thenReturn(true);
-        when(spyModule.validateStreamName(streamName)).thenReturn(true);
-        when(spyModule.getDruid(streamName)).thenReturn(druid);
-        when(spyModule.getFilename(streamName)).thenReturn(filename);
-        when(spyModule.verifyStacksToken(token, druid, filename, userIp)).thenReturn(true);
-
-        assertEquals(true, spyModule.authorizePlay(queryString, userIp, streamName));
-    }
-
-    @Test
-    public void authorizePlay_falseIfNotAuthorized()
-    {
-        String filename = "ignored";
-        String streamName = "oo/000/oo/0000/" + filename;
-        String druid = "oo000oo0000";
-        String queryString = "query";
-        String userIp = "1.1.1.1";
-        String token = "abcd";
-        SulWowza spyModule = spy(testModule);
-
-        when(spyModule.getStacksToken(queryString)).thenReturn(token);
-        when(spyModule.validateStacksToken(token)).thenReturn(true);
-        when(spyModule.validateUserIp(userIp)).thenReturn(true);
-        when(spyModule.validateStreamName(streamName)).thenReturn(true);
-        when(spyModule.getDruid(streamName)).thenReturn(druid);
-        when(spyModule.getFilename(streamName)).thenReturn(filename);
-        when(spyModule.verifyStacksToken(token, druid, filename, userIp)).thenReturn(false);
-
-        assertEquals(false, spyModule.authorizePlay(queryString, userIp, streamName));
-    }
-
-    @Test
-    public void authorizePlay_validatesStacksToken()
-    {
-        String queryString = "query";
-        String userIp = "1.1.1.1";
-        String streamName = "stream.mp4";
-        String token = "abcd";
-
-        SulWowza spyModule = spy(testModule);
-        when(spyModule.getStacksToken(queryString)).thenReturn(token);
-        when(spyModule.validateUserIp("1")).thenReturn(true);
-
-        spyModule.authorizePlay(queryString, userIp, streamName);
-        verify(spyModule).validateStacksToken(token);
-    }
-
-    @Test
-    public void authorizePlay_validatesUserIp()
-    {
-        String queryString = "query";
-        String userIp = "1.1.1.1";
-        String streamName = "stream.mp4";
-        String token = "abcd";
-
-        SulWowza spyModule = spy(testModule);
-        when(spyModule.getStacksToken(queryString)).thenReturn(token);
-        when(spyModule.validateStacksToken(token)).thenReturn(true);
-
-        spyModule.authorizePlay(queryString, userIp, streamName);
-        verify(spyModule).validateUserIp(userIp);
-    }
-
-    @Test
-    public void authorizePlay_validatesStreamName()
-    {
-        String queryString = "query";
-        String userIp = "1.1.1.1";
-        String streamName = "stream.mp4";
-        String token = "abcd";
-
-        SulWowza spyModule = spy(testModule);
-        when(spyModule.getStacksToken(queryString)).thenReturn(token);
-        when(spyModule.validateStacksToken(token)).thenReturn(true);
-        when(spyModule.validateUserIp(userIp)).thenReturn(true);
-
-        spyModule.authorizePlay(queryString, userIp, streamName);
-        verify(spyModule).validateStreamName(streamName);
-    }
-
-    @Test
-    public void authorizePlay_falseIfNullDruid()
-    {
-        String queryString = "query";
-        String userIp = "1.1.1.1";
-        String streamName = "aa/123/bb/1234/filename.ext";
-        String token = "abcd";
-
-        SulWowza spyModule = spy(testModule);
-        when(spyModule.getStacksToken(queryString)).thenReturn(token);
-        when(spyModule.validateStacksToken(token)).thenReturn(true);
-        when(spyModule.validateUserIp(userIp)).thenReturn(true);
-        when(spyModule.validateStreamName(streamName)).thenReturn(true);
-        when(spyModule.getDruid(streamName)).thenReturn(null);
-
-        assertEquals(false, spyModule.authorizePlay(queryString, userIp, streamName));
-        verify(spyModule, never()).verifyStacksToken(anyString(), anyString(), anyString(), anyString());
-    }
-
-    @Test
-    public void authorizePlay_falseIfNullFilename()
-    {
-        String queryString = "query";
-        String userIp = "1.1.1.1";
-        String streamName = "aa/123/bb/1234/filename.ext";
-        String token = "abcd";
-
-        SulWowza spyModule = spy(testModule);
-        when(spyModule.getStacksToken(queryString)).thenReturn(token);
-        when(spyModule.validateStacksToken(token)).thenReturn(true);
-        when(spyModule.validateUserIp(userIp)).thenReturn(true);
-        when(spyModule.validateStreamName(streamName)).thenReturn(true);
-        when(spyModule.getFilename(streamName)).thenReturn(null);
-
-        assertEquals(false, spyModule.authorizePlay(queryString, userIp, streamName));
-        verify(spyModule, never()).verifyStacksToken(anyString(), anyString(), anyString(), anyString());
-    }
-
-    @Test
-    public void authorizePlay_getsStacksToken()
-    {
-        String queryString = "query";
-        String userIp = "1.1.1.1";
-        String streamName = "aa/123/bb/1234/filename.ext";
-
-        SulWowza spyModule = spy(testModule);
-        spyModule.authorizePlay(queryString, userIp, streamName);
-        verify(spyModule).getStacksToken(queryString);
-    }
-
-    @Test
-    public void authorizePlay_getsFilenameFromStreamName()
-    {
-        String queryString = "query";
-        String userIp = "1.1.1.1";
-        String streamName = "aa/123/bb/1234/filename.ext";
-        String token = "abcd";
-        SulWowza spyModule = spy(testModule);
-        when(spyModule.getStacksToken(queryString)).thenReturn(token);
-        when(spyModule.validateStacksToken(token)).thenReturn(true);
-        when(spyModule.validateUserIp(userIp)).thenReturn(true);
-        when(spyModule.validateStreamName(streamName)).thenReturn(true);
-
-        spyModule.authorizePlay(queryString, userIp, streamName);
-        verify(spyModule).getFilename(streamName);
-    }
-
-    @Test
-    public void authorizePlay_getsDruidFromStreamName()
-    {
-        String queryString = "query";
-        String userIp = "1.1.1.1";
-        String streamName = "aa/123/bb/1234/filename.ext";
-        String token = "abcd";
-        SulWowza spyModule = spy(testModule);
-        when(spyModule.getStacksToken(queryString)).thenReturn(token);
-        when(spyModule.validateStacksToken(token)).thenReturn(true);
-        when(spyModule.validateUserIp(userIp)).thenReturn(true);
-        when(spyModule.validateStreamName(streamName)).thenReturn(true);
-
-        spyModule.authorizePlay(queryString, userIp, streamName);
-        verify(spyModule).getDruid(streamName);
-    }
-
-    @Test
     public void setStacksConnectionTimeout_validPropertyValue()
     {
         int exampleValue = 5;
@@ -718,5 +541,182 @@ public class TestSulWowza
         spyModule.authorizeSession(sessionMock);
         verify(spyModule, never()).verifyStacksToken(anyString(), anyString(), anyString(), anyString());
         verify(sessionMock).rejectSession();
+    }
+
+    @Test
+    public void authorizePlay_trueIfAuthorized()
+    {
+        String filename = "ignored";
+        String streamName = "oo/000/oo/0000/" + filename;
+        String druid = "oo000oo0000";
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String token = "abcd";
+        SulWowza spyModule = spy(testModule);
+
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+        when(spyModule.validateUserIp(userIp)).thenReturn(true);
+        when(spyModule.validateStreamName(streamName)).thenReturn(true);
+        when(spyModule.getDruid(streamName)).thenReturn(druid);
+        when(spyModule.getFilename(streamName)).thenReturn(filename);
+        when(spyModule.verifyStacksToken(token, druid, filename, userIp)).thenReturn(true);
+
+        assertEquals(true, spyModule.authorizePlay(queryString, userIp, streamName));
+    }
+
+    @Test
+    public void authorizePlay_falseIfNotAuthorized()
+    {
+        String filename = "ignored";
+        String streamName = "oo/000/oo/0000/" + filename;
+        String druid = "oo000oo0000";
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String token = "abcd";
+        SulWowza spyModule = spy(testModule);
+
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+        when(spyModule.validateUserIp(userIp)).thenReturn(true);
+        when(spyModule.validateStreamName(streamName)).thenReturn(true);
+        when(spyModule.getDruid(streamName)).thenReturn(druid);
+        when(spyModule.getFilename(streamName)).thenReturn(filename);
+        when(spyModule.verifyStacksToken(token, druid, filename, userIp)).thenReturn(false);
+
+        assertEquals(false, spyModule.authorizePlay(queryString, userIp, streamName));
+    }
+
+    @Test
+    public void authorizePlay_validatesStacksToken()
+    {
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "stream.mp4";
+        String token = "abcd";
+
+        SulWowza spyModule = spy(testModule);
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateUserIp("1")).thenReturn(true);
+
+        spyModule.authorizePlay(queryString, userIp, streamName);
+        verify(spyModule).validateStacksToken(token);
+    }
+
+    @Test
+    public void authorizePlay_validatesUserIp()
+    {
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "stream.mp4";
+        String token = "abcd";
+
+        SulWowza spyModule = spy(testModule);
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+
+        spyModule.authorizePlay(queryString, userIp, streamName);
+        verify(spyModule).validateUserIp(userIp);
+    }
+
+    @Test
+    public void authorizePlay_validatesStreamName()
+    {
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "stream.mp4";
+        String token = "abcd";
+
+        SulWowza spyModule = spy(testModule);
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+        when(spyModule.validateUserIp(userIp)).thenReturn(true);
+
+        spyModule.authorizePlay(queryString, userIp, streamName);
+        verify(spyModule).validateStreamName(streamName);
+    }
+
+    @Test
+    public void authorizePlay_falseIfNullDruid()
+    {
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "aa/123/bb/1234/filename.ext";
+        String token = "abcd";
+
+        SulWowza spyModule = spy(testModule);
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+        when(spyModule.validateUserIp(userIp)).thenReturn(true);
+        when(spyModule.validateStreamName(streamName)).thenReturn(true);
+        when(spyModule.getDruid(streamName)).thenReturn(null);
+
+        assertEquals(false, spyModule.authorizePlay(queryString, userIp, streamName));
+        verify(spyModule, never()).verifyStacksToken(anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    public void authorizePlay_falseIfNullFilename()
+    {
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "aa/123/bb/1234/filename.ext";
+        String token = "abcd";
+
+        SulWowza spyModule = spy(testModule);
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+        when(spyModule.validateUserIp(userIp)).thenReturn(true);
+        when(spyModule.validateStreamName(streamName)).thenReturn(true);
+        when(spyModule.getFilename(streamName)).thenReturn(null);
+
+        assertEquals(false, spyModule.authorizePlay(queryString, userIp, streamName));
+        verify(spyModule, never()).verifyStacksToken(anyString(), anyString(), anyString(), anyString());
+    }
+
+    @Test
+    public void authorizePlay_getsStacksToken()
+    {
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "aa/123/bb/1234/filename.ext";
+
+        SulWowza spyModule = spy(testModule);
+        spyModule.authorizePlay(queryString, userIp, streamName);
+        verify(spyModule).getStacksToken(queryString);
+    }
+
+    @Test
+    public void authorizePlay_getsFilenameFromStreamName()
+    {
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "aa/123/bb/1234/filename.ext";
+        String token = "abcd";
+        SulWowza spyModule = spy(testModule);
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+        when(spyModule.validateUserIp(userIp)).thenReturn(true);
+        when(spyModule.validateStreamName(streamName)).thenReturn(true);
+
+        spyModule.authorizePlay(queryString, userIp, streamName);
+        verify(spyModule).getFilename(streamName);
+    }
+
+    @Test
+    public void authorizePlay_getsDruidFromStreamName()
+    {
+        String queryString = "query";
+        String userIp = "1.1.1.1";
+        String streamName = "aa/123/bb/1234/filename.ext";
+        String token = "abcd";
+        SulWowza spyModule = spy(testModule);
+        when(spyModule.getStacksToken(queryString)).thenReturn(token);
+        when(spyModule.validateStacksToken(token)).thenReturn(true);
+        when(spyModule.validateUserIp(userIp)).thenReturn(true);
+        when(spyModule.validateStreamName(streamName)).thenReturn(true);
+
+        spyModule.authorizePlay(queryString, userIp, streamName);
+        verify(spyModule).getDruid(streamName);
     }
 }
