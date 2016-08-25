@@ -8,6 +8,8 @@ import org.junit.*;
 
 import org.apache.log4j.*;
 
+import io.honeybadger.reporter.HoneybadgerUncaughtExceptionHandler;
+
 import com.wowza.wms.amf.AMFDataList;
 import com.wowza.wms.application.ApplicationInstance;
 import com.wowza.wms.application.IApplicationInstance;
@@ -158,6 +160,26 @@ public class TestSulWowza
         {
             logger.removeAppender(appender);
         }
+    }
+
+    @Test
+    public void onAppStart_setsUpUncaughtExceptionHandler()
+    {
+        SulWowza spyModule = spy(testModule);
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        spyModule.onAppStart(appInstanceMock);
+
+        verify(spyModule).registerUncaughtExceptionHandler();
+    }
+
+    @Test
+    public void registerUncaughtExceptionHandler_registersHoneybadger()
+    {
+        testModule.registerUncaughtExceptionHandler();
+
+        HoneybadgerUncaughtExceptionHandler curThreadUncaughtExceptionHandler =
+            (HoneybadgerUncaughtExceptionHandler) (Thread.getDefaultUncaughtExceptionHandler());
+        assertThat(curThreadUncaughtExceptionHandler, instanceOf(HoneybadgerUncaughtExceptionHandler.class));
     }
 
     @Test

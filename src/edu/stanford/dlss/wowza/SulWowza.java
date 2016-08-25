@@ -10,8 +10,12 @@ import java.util.regex.Pattern;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.commons.validator.routines.InetAddressValidator;
+
 import com.google.common.escape.Escaper;
 import com.google.common.net.PercentEscaper;
+
+import io.honeybadger.reporter.HoneybadgerUncaughtExceptionHandler;
+
 import com.wowza.wms.amf.AMFDataList;
 import com.wowza.wms.application.ApplicationInstance;
 import com.wowza.wms.application.IApplicationInstance;
@@ -37,6 +41,7 @@ public class SulWowza extends ModuleBase
      * defined in the IModuleOnApp interface */
     public void onAppStart(IApplicationInstance appInstance)
     {
+        registerUncaughtExceptionHandler();
         setStacksConnectionTimeout(appInstance);
         setStacksReadTimeout(appInstance);
         stacksTokenVerificationBaseUrl = getStacksUrl(appInstance);
@@ -123,6 +128,11 @@ public class SulWowza extends ModuleBase
 
 
     // --------------------------------- the public API is above this line ----------------------------------------
+
+    void registerUncaughtExceptionHandler()
+    {
+        HoneybadgerUncaughtExceptionHandler.registerAsUncaughtExceptionHandler();
+    }
 
     /** default setting for stacks service connection timeout (time to establish a connection), in seconds */
     public static final int DEFAULT_STACKS_CONNECTION_TIMEOUT = 20;
