@@ -15,6 +15,8 @@ import com.google.common.escape.Escaper;
 import com.google.common.net.PercentEscaper;
 
 import io.honeybadger.reporter.HoneybadgerUncaughtExceptionHandler;
+import io.honeybadger.reporter.HoneybadgerReporter;
+import io.honeybadger.reporter.NoticeReporter;
 
 import com.wowza.wms.amf.AMFDataList;
 import com.wowza.wms.application.ApplicationInstance;
@@ -33,6 +35,8 @@ public class SulWowza extends ModuleBase
     static String stacksUrlErrorMsg = "rejecting due to invalid stacksURL property (" + stacksTokenVerificationBaseUrl + ")";
     static int stacksConnectionTimeout;
     static int stacksReadTimeout;
+    static NoticeReporter noticeReporter;
+
 
     /** configuration is invalid if the stacks url is malformed */
     boolean invalidConfiguration = false;
@@ -42,6 +46,7 @@ public class SulWowza extends ModuleBase
     public void onAppStart(IApplicationInstance appInstance)
     {
         registerUncaughtExceptionHandler();
+        initNoticeReporter();
         setStacksConnectionTimeout(appInstance);
         setStacksReadTimeout(appInstance);
         stacksTokenVerificationBaseUrl = getStacksUrl(appInstance);
@@ -53,7 +58,9 @@ public class SulWowza extends ModuleBase
         catch (MalformedURLException e)
         {
             invalidConfiguration = true;
-            getLogger().error(this.getClass().getSimpleName() + " unable to initialize module due to bad stacksURL ", e);
+            String msg = this.getClass().getSimpleName() + " unable to initialize module due to bad stacksURL ";
+            getLogger().error(msg, e);
+            reportNotice(msg, e);
         }
     }
 
@@ -134,6 +141,29 @@ public class SulWowza extends ModuleBase
         HoneybadgerUncaughtExceptionHandler.registerAsUncaughtExceptionHandler();
     }
 
+    void initNoticeReporter()
+    {
+        noticeReporter = new HoneybadgerReporter();
+    }
+
+    NoticeReporter getNoticeReporter()
+    {
+        if (noticeReporter == null)
+            initNoticeReporter();
+        return noticeReporter;
+    }
+
+    void reportNotice(String msg)
+    {
+        reportNotice(msg, null);
+    }
+
+    void reportNotice(String msg, Throwable cause)
+    {
+        Throwable t = new Throwable(msg, cause);
+        getNoticeReporter().reportError(t);
+    }
+
     /** default setting for stacks service connection timeout (time to establish a connection), in seconds */
     public static final int DEFAULT_STACKS_CONNECTION_TIMEOUT = 20;
 
@@ -151,8 +181,9 @@ public class SulWowza extends ModuleBase
         }
         catch (Exception e)
         {
-            getLogger().info(this.getClass().getSimpleName() +
-                            " unable to read stacksConnectionTimeout from properties; using default ", e);
+            String msg = this.getClass().getSimpleName() + " unable to read stacksConnectionTimeout from properties; using default ";
+            getLogger().info(msg, e);
+            reportNotice(msg, e);
             stacksConnectionTimeout = DEFAULT_STACKS_CONNECTION_TIMEOUT;
         }
         getLogger().info(this.getClass().getSimpleName() + " stacksConnectionTimeout is " + String.valueOf(stacksConnectionTimeout));
@@ -176,8 +207,9 @@ public class SulWowza extends ModuleBase
         }
         catch (Exception e)
         {
-            getLogger().info(this.getClass().getSimpleName() +
-                            " unable to read stacksReadTimeout from properties; using default ", e);
+            String msg = this.getClass().getSimpleName() + " unable to read stacksReadTimeout from properties; using default ";
+            getLogger().info(msg, e);
+            reportNotice(msg, e);
             stacksReadTimeout = DEFAULT_STACKS_READ_TIMEOUT;
         }
         getLogger().info(this.getClass().getSimpleName() + " stacksReadTimeout is " + String.valueOf(stacksReadTimeout));
@@ -196,7 +228,9 @@ public class SulWowza extends ModuleBase
         }
         catch (Exception e)
         {
-            getLogger().info(this.getClass().getSimpleName() + " unable to read stacksURL from properties ", e);
+            String msg = this.getClass().getSimpleName() + " unable to read stacksURL from properties ";
+            getLogger().info(msg, e);
+            reportNotice(msg, e);
             return "";
         }
     }
@@ -319,8 +353,12 @@ public class SulWowza extends ModuleBase
             return true;
         else
         {
-            getLogger().error(this.getClass().getSimpleName() + ": User IP missing or invalid" +
-                                (userIp == null ? "" : ": " + userIp));
+            // unlike, e.g., stream name or token validation, where what's being validated is essentially user input,
+            // user IP isn't something we really expect to be invalid, since it should be determined by internal mechanisms.
+            // hence, invalid IPs seem more worth reporting (as opposed to just logging).
+            String msg = this.getClass().getSimpleName() + ": User IP missing or invalid" + (userIp == null ? "" : ": " + userIp);
+            getLogger().error(msg);
+            reportNotice(msg);
             return false;
         }
     }
@@ -404,7 +442,9 @@ public class SulWowza extends ModuleBase
         }
         catch (MalformedURLException e)
         {
-            getLogger().error(this.getClass().getSimpleName() + " bad URL for stacks_token verification: ", e);
+            String msg = this.getClass().getSimpleName() + " bad URL for stacks_token verification: ";
+            getLogger().error(msg, e);
+            reportNotice(msg, e);
             return null;
         }
     }
@@ -428,11 +468,15 @@ public class SulWowza extends ModuleBase
         {
             // the connect timeout expired before a connection was established, OR
             // the read timeout expired before there was data available for read
-            getLogger().error(this.getClass().getSimpleName() + " unable to verify stacks token at " + verifyStacksTokenUrl + " ", e);
+            String msg = this.getClass().getSimpleName() + " unable to verify stacks token at " + verifyStacksTokenUrl + " ";
+            getLogger().error(msg, e);
+            reportNotice(msg, e);
         }
         catch (IOException e)
         {
-            getLogger().error(this.getClass().getSimpleName() + " unable to verify stacks token at " + verifyStacksTokenUrl + " ", e);
+            String msg = this.getClass().getSimpleName() + " unable to verify stacks token at " + verifyStacksTokenUrl + " ";
+            getLogger().error(msg, e);
+            reportNotice(msg, e);
         }
         return false;
     }
