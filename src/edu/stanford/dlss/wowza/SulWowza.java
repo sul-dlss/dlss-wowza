@@ -17,6 +17,7 @@ import com.google.common.net.PercentEscaper;
 import io.honeybadger.reporter.HoneybadgerUncaughtExceptionHandler;
 import io.honeybadger.reporter.HoneybadgerReporter;
 import io.honeybadger.reporter.NoticeReporter;
+import io.honeybadger.reporter.config.StandardConfigContext;
 
 import com.wowza.wms.amf.AMFDataList;
 import com.wowza.wms.application.ApplicationInstance;
@@ -33,9 +34,12 @@ public class SulWowza extends ModuleBase
 {
     static String stacksTokenVerificationBaseUrl;
     static String stacksUrlErrorMsg = "rejecting due to invalid stacksURL property (" + stacksTokenVerificationBaseUrl + ")";
+    static final String HONEYBADGER_KEY = "WOWZA_HONEYBADGER_API_KEY";
+    static final String HONEYBADGER_ENVIRONMENT = "WOWZA_ENVIRONMENT";
     static int stacksConnectionTimeout;
     static int stacksReadTimeout;
     static NoticeReporter noticeReporter;
+    StandardConfigContext honeybadgerConfig;
 
 
     /** configuration is invalid if the stacks url is malformed */
@@ -45,6 +49,7 @@ public class SulWowza extends ModuleBase
      * defined in the IModuleOnApp interface */
     public void onAppStart(IApplicationInstance appInstance)
     {
+        initHoneybadger();
         registerUncaughtExceptionHandler();
         initNoticeReporter();
         setStacksConnectionTimeout(appInstance);
@@ -133,17 +138,38 @@ public class SulWowza extends ModuleBase
         }
 	}
 
+    /**
+     * Initalizes the Honeybadger error reporting tool. This is a public method so we can call
+     * it from the tests. It's outside the constructor, since testing constructors with Mockito is a pain.
+     */
+    public void initHoneybadger()
+    {
+        String apiKey = System.getenv(HONEYBADGER_KEY);
+        if(apiKey == null)
+        {
+            getLogger().error(this.getClass().getSimpleName() + " unable to set up Honeybadger error reporting (missing API key environment variable?).");
+            invalidConfiguration = true;
+        }
+        else
+        {
+            honeybadgerConfig = new StandardConfigContext();
+            honeybadgerConfig.setApiKey(apiKey)
+                             .setEnvironment(HONEYBADGER_ENVIRONMENT)
+                             .setApplicationPackage(this.getClass().getPackage().getName());
+        }
+    }
+
 
     // --------------------------------- the public API is above this line ----------------------------------------
 
     void registerUncaughtExceptionHandler()
     {
-        HoneybadgerUncaughtExceptionHandler.registerAsUncaughtExceptionHandler();
+        HoneybadgerUncaughtExceptionHandler.registerAsUncaughtExceptionHandler(honeybadgerConfig);
     }
 
     void initNoticeReporter()
     {
-        noticeReporter = new HoneybadgerReporter();
+        noticeReporter = new HoneybadgerReporter(honeybadgerConfig);
     }
 
     NoticeReporter getNoticeReporter()
