@@ -40,10 +40,19 @@ public class SulWowza extends ModuleBase
     static int stacksReadTimeout;
     static NoticeReporter noticeReporter;
     StandardConfigContext honeybadgerConfig;
+    SulEnvironment environment;
 
 
     /** configuration is invalid if the stacks url is malformed */
     boolean invalidConfiguration = false;
+
+    public SulWowza()
+    {}
+
+    public SulWowza(SulEnvironment se)
+    {
+        environment = se;
+    }
 
     /** invoked when a Wowza application instance is started;
      * defined in the IModuleOnApp interface */
@@ -144,10 +153,13 @@ public class SulWowza extends ModuleBase
      */
     public void initHoneybadger()
     {
-        String apiKey = System.getenv(HONEYBADGER_KEY);
+        if(environment == null)
+            environment = new SulEnvironment();
+
+        String apiKey = environment.getEnvironmentVariable(HONEYBADGER_KEY);
         if(apiKey == null)
         {
-            getLogger().error(this.getClass().getSimpleName() + " unable to set up Honeybadger error reporting (missing API key environment variable?).");
+            getLogger().error(this.getClass().getSimpleName() + " unable to set up Honeybadger error reporting (missing API key environment variable?)");
             invalidConfiguration = true;
         }
         else
@@ -161,34 +173,6 @@ public class SulWowza extends ModuleBase
 
 
     // --------------------------------- the public API is above this line ----------------------------------------
-
-    void registerUncaughtExceptionHandler()
-    {
-        HoneybadgerUncaughtExceptionHandler.registerAsUncaughtExceptionHandler(honeybadgerConfig);
-    }
-
-    void initNoticeReporter()
-    {
-        noticeReporter = new HoneybadgerReporter(honeybadgerConfig);
-    }
-
-    NoticeReporter getNoticeReporter()
-    {
-        if (noticeReporter == null)
-            initNoticeReporter();
-        return noticeReporter;
-    }
-
-    void reportNotice(String msg)
-    {
-        reportNotice(msg, null);
-    }
-
-    void reportNotice(String msg, Throwable cause)
-    {
-        Throwable t = new Throwable(msg, cause);
-        getNoticeReporter().reportError(t);
-    }
 
     /** default setting for stacks service connection timeout (time to establish a connection), in seconds */
     public static final int DEFAULT_STACKS_CONNECTION_TIMEOUT = 20;
@@ -568,5 +552,36 @@ public class SulWowza extends ModuleBase
     static String escapePathSegment(String rawPathSegment)
     {
         return pathSegmentEscaper().escape(rawPathSegment);
+    }
+
+    /**
+     * The methods below set up Honeybadger and report errors to it.
+     */
+    void registerUncaughtExceptionHandler()
+    {
+        HoneybadgerUncaughtExceptionHandler.registerAsUncaughtExceptionHandler(honeybadgerConfig);
+    }
+
+    void initNoticeReporter()
+    {
+        noticeReporter = new HoneybadgerReporter(honeybadgerConfig);
+    }
+
+    NoticeReporter getNoticeReporter()
+    {
+        if (noticeReporter == null)
+            initNoticeReporter();
+        return noticeReporter;
+    }
+
+    void reportNotice(String msg)
+    {
+        reportNotice(msg, null);
+    }
+
+    void reportNotice(String msg, Throwable cause)
+    {
+        Throwable t = new Throwable(msg, cause);
+        getNoticeReporter().reportError(t);
     }
 }

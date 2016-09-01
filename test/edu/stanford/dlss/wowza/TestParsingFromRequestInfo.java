@@ -17,6 +17,7 @@ public class TestParsingFromRequestInfo
     public void setUp()
     {
         testModule = new SulWowza();
+        testModule.initHoneybadger();
     }
 
     @Test

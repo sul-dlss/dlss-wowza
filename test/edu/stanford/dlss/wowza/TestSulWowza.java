@@ -21,6 +21,7 @@ import com.wowza.wms.httpstreamer.mpegdashstreaming.httpstreamer.HTTPStreamerSes
 import com.wowza.wms.request.RequestFunction;
 
 import java.io.ByteArrayOutputStream;
+import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -164,6 +165,21 @@ public class TestSulWowza
     }
 
     @Test
+    public void onAppStart_badUrl_callsHoneybadger()
+    {
+        MalformedURLException mue = new MalformedURLException("no protocol: badUrl");
+        SulWowza spyModule = spy(testModule);
+        String badUrlStr = "badUrl";
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyStr("stacksURL", SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenReturn(badUrlStr);
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+
+        spyModule.onAppStart(appInstanceMock);
+        verify(spyModule).reportNotice(anyString(), any());
+    }
+
+    @Test
     public void onAppStart_setsUpUncaughtExceptionHandler()
     {
         SulWowza spyModule = spy(testModule);
@@ -172,6 +188,39 @@ public class TestSulWowza
 
         verify(spyModule).registerUncaughtExceptionHandler();
     }
+
+    @Test
+    public void onAppStart_initializesHoneybadger()
+    {
+        SulWowza spyModule = spy(testModule);
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        spyModule.onAppStart(appInstanceMock);
+
+        verify(spyModule).initHoneybadger();
+    }
+
+    @Test
+    public void initHoneybadger_failsWithoutAPIKey()
+    {
+        SulEnvironment mockSystem = mock(SulEnvironment.class);
+        when(mockSystem.getEnvironmentVariable(SulWowza.HONEYBADGER_KEY)).thenReturn(null);
+
+        SulWowza localTestModule = new SulWowza(mockSystem);
+        localTestModule.initHoneybadger();
+        assertTrue(localTestModule.invalidConfiguration);
+    }
+
+    @Test
+    public void initHoneybadger_succeedsWithAPIKey()
+    {
+        SulEnvironment mockSystem = mock(SulEnvironment.class);
+        when(mockSystem.getEnvironmentVariable(SulWowza.HONEYBADGER_KEY)).thenReturn("abcd");
+
+        SulWowza localTestModule = new SulWowza(mockSystem);
+        localTestModule.initHoneybadger();
+        assertFalse(localTestModule.invalidConfiguration);
+    }
+
 
     @Test
     public void registerUncaughtExceptionHandler_registersHoneybadger()
@@ -344,6 +393,22 @@ public class TestSulWowza
     }
 
     @Test
+    public void setStacksConnectionTimeout_callsHoneybadger_ifExceptionThrown()
+    {
+        ClassCastException cce = new java.lang.ClassCastException();
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyInt("stacksConnectionTimeout", SulWowza.DEFAULT_STACKS_CONNECTION_TIMEOUT)).thenThrow(cce);
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+
+        SulWowza spyModule = spy(testModule);
+        spyModule.setStacksConnectionTimeout(appInstanceMock);
+        verify(spyModule).reportNotice(spyModule.getClass().getSimpleName() +
+                                       " unable to read stacksConnectionTimeout from properties; using default ",
+                                       cce);
+    }
+
+    @Test
     public void setStacksReadTimeout_validPropertyValue()
     {
         int exampleValue = 5;
@@ -390,6 +455,22 @@ public class TestSulWowza
     }
 
     @Test
+    public void setStacksReadTimeout_callsHoneybadger_ifExceptionThrown()
+    {
+        ClassCastException cce = new ClassCastException();
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyInt("stacksReadTimeout", SulWowza.DEFAULT_STACKS_READ_TIMEOUT)).thenThrow(cce);
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+
+        SulWowza spyModule = spy(testModule);
+        spyModule.setStacksReadTimeout(appInstanceMock);
+        verify(spyModule).reportNotice(spyModule.getClass().getSimpleName() +
+                                       " unable to read stacksReadTimeout from properties; using default ",
+                                       cce);
+    }
+
+    @Test
     public void getStacksUrl_returnsEmptyString_ifExceptionThrown()
     {
         WMSProperties mockProperties = mock(WMSProperties.class);
@@ -397,6 +478,22 @@ public class TestSulWowza
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
         when(appInstanceMock.getProperties()).thenReturn(mockProperties);
         assertEquals("", testModule.getStacksUrl(appInstanceMock));
+    }
+
+    @Test
+    public void getStacksUrl_callsHoneybadger_ifExceptionThrown()
+    {
+        ClassCastException cce = new ClassCastException();
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyStr("stacksURL", SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL)).thenThrow(cce);
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+
+        SulWowza spyModule = spy(testModule);
+        spyModule.getStacksUrl(appInstanceMock);
+        verify(spyModule).reportNotice(spyModule.getClass().getSimpleName() +
+                                       " unable to read stacksURL from properties ",
+                                       cce);
     }
 
     @Test
@@ -488,6 +585,14 @@ public class TestSulWowza
 
         spyModule.authorizeSession(sessionMock);
         verify(spyModule).validateUserIp(ipAddr);
+    }
+
+    @Test
+    public void validatesUserIp_callsHoneybadgerWhenIpIsInvalid()
+    {
+        SulWowza spyModule = spy(testModule);
+        spyModule.validateUserIp(null);
+        verify(spyModule).reportNotice(spyModule.getClass().getSimpleName() + ": User IP missing or invalid");
     }
 
     @Test

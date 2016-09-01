@@ -17,6 +17,7 @@ public class TestValidationMethods
     public void setUp()
     {
         testModule = new SulWowza();
+        testModule.initHoneybadger();
     }
 
     @Test
