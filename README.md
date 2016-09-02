@@ -8,6 +8,11 @@ Wowza server side modules.  Uses Gradle (with the Gradle wrapper) as the build t
 
   ./gradlew build
 
+Before running this command, you'll need to set the `WOWZA_HONEYBADGER_API_KEY` environment variable.
+You can get the API key from our [Honeybadger](https://www.honeybadger.io/) project (`DLSS-Wowza`).
+Note that you may need to ask to get added to the `DLSS-Wowza` project as a user in order to obtain the key.
+If the environment variable is not set your tests will fail.
+
 ### Using the SulWowza plugin
 
 #### Adding the SulWowza plugin to your Wowza Application

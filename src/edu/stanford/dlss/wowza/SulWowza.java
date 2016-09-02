@@ -10,8 +10,15 @@ import java.util.regex.Pattern;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.commons.validator.routines.InetAddressValidator;
+
 import com.google.common.escape.Escaper;
 import com.google.common.net.PercentEscaper;
+
+import io.honeybadger.reporter.HoneybadgerUncaughtExceptionHandler;
+import io.honeybadger.reporter.HoneybadgerReporter;
+import io.honeybadger.reporter.NoticeReporter;
+import io.honeybadger.reporter.config.StandardConfigContext;
+
 import com.wowza.wms.amf.AMFDataList;
 import com.wowza.wms.application.ApplicationInstance;
 import com.wowza.wms.application.IApplicationInstance;
@@ -27,16 +34,33 @@ public class SulWowza extends ModuleBase
 {
     static String stacksTokenVerificationBaseUrl;
     static String stacksUrlErrorMsg = "rejecting due to invalid stacksURL property (" + stacksTokenVerificationBaseUrl + ")";
+    static final String HONEYBADGER_KEY = "WOWZA_HONEYBADGER_API_KEY";
+    static final String HONEYBADGER_ENVIRONMENT = "WOWZA_ENVIRONMENT";
     static int stacksConnectionTimeout;
     static int stacksReadTimeout;
+    static NoticeReporter noticeReporter;
+    StandardConfigContext honeybadgerConfig;
+    SulEnvironment environment;
+
 
     /** configuration is invalid if the stacks url is malformed */
     boolean invalidConfiguration = false;
+
+    public SulWowza()
+    {}
+
+    public SulWowza(SulEnvironment se)
+    {
+        environment = se;
+    }
 
     /** invoked when a Wowza application instance is started;
      * defined in the IModuleOnApp interface */
     public void onAppStart(IApplicationInstance appInstance)
     {
+        initHoneybadger();
+        registerUncaughtExceptionHandler();
+        initNoticeReporter();
         setStacksConnectionTimeout(appInstance);
         setStacksReadTimeout(appInstance);
         stacksTokenVerificationBaseUrl = getStacksUrl(appInstance);
@@ -48,7 +72,9 @@ public class SulWowza extends ModuleBase
         catch (MalformedURLException e)
         {
             invalidConfiguration = true;
-            getLogger().error(this.getClass().getSimpleName() + " unable to initialize module due to bad stacksURL ", e);
+            String msg = this.getClass().getSimpleName() + " unable to initialize module due to bad stacksURL ";
+            getLogger().error(msg, e);
+            reportNotice(msg, e);
         }
     }
 
@@ -121,6 +147,30 @@ public class SulWowza extends ModuleBase
         }
 	}
 
+    /**
+     * Initalizes the Honeybadger error reporting tool. This is a public method so we can call
+     * it from the tests. It's outside the constructor, since testing constructors with Mockito is a pain.
+     */
+    public void initHoneybadger()
+    {
+        if(environment == null)
+            environment = new SulEnvironment();
+
+        String apiKey = environment.getEnvironmentVariable(HONEYBADGER_KEY);
+        if(apiKey == null)
+        {
+            getLogger().error(this.getClass().getSimpleName() + " unable to set up Honeybadger error reporting (missing API key environment variable?)");
+            invalidConfiguration = true;
+        }
+        else
+        {
+            honeybadgerConfig = new StandardConfigContext();
+            honeybadgerConfig.setApiKey(apiKey)
+                             .setEnvironment(HONEYBADGER_ENVIRONMENT)
+                             .setApplicationPackage(this.getClass().getPackage().getName());
+        }
+    }
+
 
     // --------------------------------- the public API is above this line ----------------------------------------
 
@@ -141,8 +191,9 @@ public class SulWowza extends ModuleBase
         }
         catch (Exception e)
         {
-            getLogger().info(this.getClass().getSimpleName() +
-                            " unable to read stacksConnectionTimeout from properties; using default ", e);
+            String msg = this.getClass().getSimpleName() + " unable to read stacksConnectionTimeout from properties; using default ";
+            getLogger().info(msg, e);
+            reportNotice(msg, e);
             stacksConnectionTimeout = DEFAULT_STACKS_CONNECTION_TIMEOUT;
         }
         getLogger().info(this.getClass().getSimpleName() + " stacksConnectionTimeout is " + String.valueOf(stacksConnectionTimeout));
@@ -166,8 +217,9 @@ public class SulWowza extends ModuleBase
         }
         catch (Exception e)
         {
-            getLogger().info(this.getClass().getSimpleName() +
-                            " unable to read stacksReadTimeout from properties; using default ", e);
+            String msg = this.getClass().getSimpleName() + " unable to read stacksReadTimeout from properties; using default ";
+            getLogger().info(msg, e);
+            reportNotice(msg, e);
             stacksReadTimeout = DEFAULT_STACKS_READ_TIMEOUT;
         }
         getLogger().info(this.getClass().getSimpleName() + " stacksReadTimeout is " + String.valueOf(stacksReadTimeout));
@@ -186,7 +238,9 @@ public class SulWowza extends ModuleBase
         }
         catch (Exception e)
         {
-            getLogger().info(this.getClass().getSimpleName() + " unable to read stacksURL from properties ", e);
+            String msg = this.getClass().getSimpleName() + " unable to read stacksURL from properties ";
+            getLogger().info(msg, e);
+            reportNotice(msg, e);
             return "";
         }
     }
@@ -309,8 +363,12 @@ public class SulWowza extends ModuleBase
             return true;
         else
         {
-            getLogger().error(this.getClass().getSimpleName() + ": User IP missing or invalid" +
-                                (userIp == null ? "" : ": " + userIp));
+            // unlike, e.g., stream name or token validation, where what's being validated is essentially user input,
+            // user IP isn't something we really expect to be invalid, since it should be determined by internal mechanisms.
+            // hence, invalid IPs seem more worth reporting (as opposed to just logging).
+            String msg = this.getClass().getSimpleName() + ": User IP missing or invalid" + (userIp == null ? "" : ": " + userIp);
+            getLogger().error(msg);
+            reportNotice(msg);
             return false;
         }
     }
@@ -394,7 +452,9 @@ public class SulWowza extends ModuleBase
         }
         catch (MalformedURLException e)
         {
-            getLogger().error(this.getClass().getSimpleName() + " bad URL for stacks_token verification: ", e);
+            String msg = this.getClass().getSimpleName() + " bad URL for stacks_token verification: ";
+            getLogger().error(msg, e);
+            reportNotice(msg, e);
             return null;
         }
     }
@@ -418,11 +478,15 @@ public class SulWowza extends ModuleBase
         {
             // the connect timeout expired before a connection was established, OR
             // the read timeout expired before there was data available for read
-            getLogger().error(this.getClass().getSimpleName() + " unable to verify stacks token at " + verifyStacksTokenUrl + " ", e);
+            String msg = this.getClass().getSimpleName() + " unable to verify stacks token at " + verifyStacksTokenUrl + " ";
+            getLogger().error(msg, e);
+            reportNotice(msg, e);
         }
         catch (IOException e)
         {
-            getLogger().error(this.getClass().getSimpleName() + " unable to verify stacks token at " + verifyStacksTokenUrl + " ", e);
+            String msg = this.getClass().getSimpleName() + " unable to verify stacks token at " + verifyStacksTokenUrl + " ";
+            getLogger().error(msg, e);
+            reportNotice(msg, e);
         }
         return false;
     }
@@ -488,5 +552,36 @@ public class SulWowza extends ModuleBase
     static String escapePathSegment(String rawPathSegment)
     {
         return pathSegmentEscaper().escape(rawPathSegment);
+    }
+
+    /**
+     * The methods below set up Honeybadger and report errors to it.
+     */
+    void registerUncaughtExceptionHandler()
+    {
+        HoneybadgerUncaughtExceptionHandler.registerAsUncaughtExceptionHandler(honeybadgerConfig);
+    }
+
+    void initNoticeReporter()
+    {
+        noticeReporter = new HoneybadgerReporter(honeybadgerConfig);
+    }
+
+    NoticeReporter getNoticeReporter()
+    {
+        if (noticeReporter == null)
+            initNoticeReporter();
+        return noticeReporter;
+    }
+
+    void reportNotice(String msg)
+    {
+        reportNotice(msg, null);
+    }
+
+    void reportNotice(String msg, Throwable cause)
+    {
+        Throwable t = new Throwable(msg, cause);
+        getNoticeReporter().reportError(t);
     }
 }
