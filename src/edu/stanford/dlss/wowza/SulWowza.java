@@ -34,7 +34,7 @@ public class SulWowza extends ModuleBase
 {
     static String stacksTokenVerificationBaseUrl;
     static String stacksUrlErrorMsg = "rejecting due to invalid stacksURL property (" + stacksTokenVerificationBaseUrl + ")";
-    static final String HONEYBADGER_KEY = "WOWZA_HONEYBADGER_API_KEY";
+    static final String HONEYBADGER_API_KEY_ENV_VAR = "WOWZA_HONEYBADGER_API_KEY";
     static final String HONEYBADGER_ENVIRONMENT = "WOWZA_ENVIRONMENT";
     static int stacksConnectionTimeout;
     static int stacksReadTimeout;
@@ -156,7 +156,7 @@ public class SulWowza extends ModuleBase
         if(environment == null)
             environment = new SulEnvironment();
 
-        String apiKey = environment.getEnvironmentVariable(HONEYBADGER_KEY);
+        String apiKey = environment.getEnvironmentVariable(HONEYBADGER_API_KEY_ENV_VAR);
         if(apiKey == null)
         {
             getLogger().error(this.getClass().getSimpleName() + " unable to set up Honeybadger error reporting (missing API key environment variable?)");
