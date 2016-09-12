@@ -203,7 +203,8 @@ public class TestSulWowza
     public void initHoneybadger_failsWithoutAPIKey()
     {
         SulEnvironment mockSystem = mock(SulEnvironment.class);
-        when(mockSystem.getEnvironmentVariable(SulWowza.HONEYBADGER_KEY)).thenReturn(null);
+        when(mockSystem.getEnvironmentVariable(SulWowza.HONEYBADGER_API_KEY_ENV_VAR)).thenReturn(null);
+        when(mockSystem.getEnvironmentVariable(SulWowza.HONEYBADGER_ENV_NAME_ENV_VAR)).thenReturn("test_env");
 
         SulWowza localTestModule = new SulWowza(mockSystem);
         localTestModule.initHoneybadger();
@@ -211,10 +212,23 @@ public class TestSulWowza
     }
 
     @Test
-    public void initHoneybadger_succeedsWithAPIKey()
+    public void initHoneybadger_failsWithoutHoneybadgerEnv()
     {
         SulEnvironment mockSystem = mock(SulEnvironment.class);
-        when(mockSystem.getEnvironmentVariable(SulWowza.HONEYBADGER_KEY)).thenReturn("abcd");
+        when(mockSystem.getEnvironmentVariable(SulWowza.HONEYBADGER_API_KEY_ENV_VAR)).thenReturn("abcd");
+        when(mockSystem.getEnvironmentVariable(SulWowza.HONEYBADGER_ENV_NAME_ENV_VAR)).thenReturn(null);
+
+        SulWowza localTestModule = new SulWowza(mockSystem);
+        localTestModule.initHoneybadger();
+        assertTrue(localTestModule.invalidConfiguration);
+    }
+
+    @Test
+    public void initHoneybadger_succeedsWithAPIKeyAndHoneybadgerEnv()
+    {
+        SulEnvironment mockSystem = mock(SulEnvironment.class);
+        when(mockSystem.getEnvironmentVariable(SulWowza.HONEYBADGER_API_KEY_ENV_VAR)).thenReturn("abcd");
+        when(mockSystem.getEnvironmentVariable(SulWowza.HONEYBADGER_ENV_NAME_ENV_VAR)).thenReturn("test_env");
 
         SulWowza localTestModule = new SulWowza(mockSystem);
         localTestModule.initHoneybadger();
