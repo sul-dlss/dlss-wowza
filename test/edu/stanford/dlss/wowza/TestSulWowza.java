@@ -8,6 +8,8 @@ import org.junit.*;
 
 import org.apache.log4j.*;
 
+import io.honeybadger.reporter.NoticeReporter;
+import io.honeybadger.reporter.HoneybadgerReporter;
 import io.honeybadger.reporter.HoneybadgerUncaughtExceptionHandler;
 
 import com.wowza.wms.amf.AMFDataList;
@@ -28,6 +30,7 @@ import java.util.Map;
 public class TestSulWowza
 {
     SulWowza testModule;
+    NoticeReporter mockNoticeReporter;
     final static String stacksToken = "encryptedStacksMediaToken";
     final static String queryStr = "stacks_token=" + stacksToken;
 
@@ -35,36 +38,52 @@ public class TestSulWowza
     public void setUp()
     {
         testModule = new SulWowza();
-        testModule.initHoneybadger();
+        mockNoticeReporter = mock(HoneybadgerReporter.class);
+        testModule.setNoticeReporter(mockNoticeReporter);
     }
 
     @Test
     public void onAppStart_calls_setStacksConnectionTimeout()
     {
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyStr(SulWowza.HONEYBADGER_API_KEY_ENV_VAR)).thenReturn("test_key");
+        when(mockProperties.getPropertyStr(SulWowza.HONEYBADGER_ENV_NAME_ENV_VAR)).thenReturn("test_env");
+
         SulWowza spyModule = spy(testModule);
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
-        spyModule.onAppStart(appInstanceMock);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
 
+        spyModule.onAppStart(appInstanceMock);
         verify(spyModule).setStacksConnectionTimeout(appInstanceMock);
     }
 
     @Test
     public void onAppStart_calls_setStacksReadTimeout()
     {
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyStr(SulWowza.HONEYBADGER_API_KEY_ENV_VAR)).thenReturn("test_key");
+        when(mockProperties.getPropertyStr(SulWowza.HONEYBADGER_ENV_NAME_ENV_VAR)).thenReturn("test_env");
+
         SulWowza spyModule = spy(testModule);
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
-        spyModule.onAppStart(appInstanceMock);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
 
+        spyModule.onAppStart(appInstanceMock);
         verify(spyModule).setStacksReadTimeout(appInstanceMock);
     }
 
     @Test
     public void onAppStart_calls_getStacksUrl()
     {
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyStr(SulWowza.HONEYBADGER_API_KEY_ENV_VAR)).thenReturn("test_key");
+        when(mockProperties.getPropertyStr(SulWowza.HONEYBADGER_ENV_NAME_ENV_VAR)).thenReturn("test_env");
+
         SulWowza spyModule = spy(testModule);
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
-        spyModule.onAppStart(appInstanceMock);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
 
+        spyModule.onAppStart(appInstanceMock);
         verify(spyModule).getStacksUrl(appInstanceMock);
     }
 
@@ -182,56 +201,75 @@ public class TestSulWowza
     @Test
     public void onAppStart_setsUpUncaughtExceptionHandler()
     {
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyStr(SulWowza.HONEYBADGER_API_KEY_ENV_VAR)).thenReturn("test_key");
+        when(mockProperties.getPropertyStr(SulWowza.HONEYBADGER_ENV_NAME_ENV_VAR)).thenReturn("test_env");
+
         SulWowza spyModule = spy(testModule);
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
-        spyModule.onAppStart(appInstanceMock);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
 
+        spyModule.onAppStart(appInstanceMock);
         verify(spyModule).registerUncaughtExceptionHandler();
     }
 
     @Test
     public void onAppStart_initializesHoneybadger()
     {
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyStr(SulWowza.HONEYBADGER_API_KEY_ENV_VAR)).thenReturn("test_key");
+        when(mockProperties.getPropertyStr(SulWowza.HONEYBADGER_ENV_NAME_ENV_VAR)).thenReturn("test_env");
+
         SulWowza spyModule = spy(testModule);
         IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
-        spyModule.onAppStart(appInstanceMock);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
 
-        verify(spyModule).initHoneybadger();
+        spyModule.onAppStart(appInstanceMock);
+        verify(spyModule).initHoneybadger(appInstanceMock);
     }
 
     @Test
     public void initHoneybadger_failsWithoutAPIKey()
     {
-        SulEnvironment mockSystem = mock(SulEnvironment.class);
-        when(mockSystem.getEnvironmentVariable(SulWowza.HONEYBADGER_API_KEY_ENV_VAR)).thenReturn(null);
-        when(mockSystem.getEnvironmentVariable(SulWowza.HONEYBADGER_ENV_NAME_ENV_VAR)).thenReturn("test_env");
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyStr(SulWowza.HONEYBADGER_API_KEY_ENV_VAR)).thenReturn(null);
+        when(mockProperties.getPropertyStr(SulWowza.HONEYBADGER_ENV_NAME_ENV_VAR)).thenReturn("test_env");
 
-        SulWowza localTestModule = new SulWowza(mockSystem);
-        localTestModule.initHoneybadger();
+        SulWowza localTestModule = new SulWowza();
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+
+        localTestModule.initHoneybadger(appInstanceMock);
         assertTrue(localTestModule.invalidConfiguration);
     }
 
     @Test
     public void initHoneybadger_failsWithoutHoneybadgerEnv()
     {
-        SulEnvironment mockSystem = mock(SulEnvironment.class);
-        when(mockSystem.getEnvironmentVariable(SulWowza.HONEYBADGER_API_KEY_ENV_VAR)).thenReturn("abcd");
-        when(mockSystem.getEnvironmentVariable(SulWowza.HONEYBADGER_ENV_NAME_ENV_VAR)).thenReturn(null);
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyStr(SulWowza.HONEYBADGER_API_KEY_ENV_VAR)).thenReturn("abcd");
+        when(mockProperties.getPropertyStr(SulWowza.HONEYBADGER_ENV_NAME_ENV_VAR)).thenReturn(null);
 
-        SulWowza localTestModule = new SulWowza(mockSystem);
-        localTestModule.initHoneybadger();
+        SulWowza localTestModule = new SulWowza();
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+
+        localTestModule.initHoneybadger(appInstanceMock);
         assertTrue(localTestModule.invalidConfiguration);
     }
 
     @Test
     public void initHoneybadger_succeedsWithAPIKeyAndHoneybadgerEnv()
     {
-        SulEnvironment mockSystem = mock(SulEnvironment.class);
-        when(mockSystem.getEnvironmentVariable(SulWowza.HONEYBADGER_API_KEY_ENV_VAR)).thenReturn("abcd");
-        when(mockSystem.getEnvironmentVariable(SulWowza.HONEYBADGER_ENV_NAME_ENV_VAR)).thenReturn("test_env");
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyStr(SulWowza.HONEYBADGER_API_KEY_ENV_VAR)).thenReturn("abcd");
+        when(mockProperties.getPropertyStr(SulWowza.HONEYBADGER_ENV_NAME_ENV_VAR)).thenReturn("test_env");
 
-        SulWowza localTestModule = new SulWowza(mockSystem);
-        localTestModule.initHoneybadger();
+        SulWowza localTestModule = new SulWowza();
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+
+        localTestModule.initHoneybadger(appInstanceMock);
         assertFalse(localTestModule.invalidConfiguration);
     }
 
@@ -239,6 +277,14 @@ public class TestSulWowza
     @Test
     public void registerUncaughtExceptionHandler_registersHoneybadger()
     {
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyStr(SulWowza.HONEYBADGER_API_KEY_ENV_VAR)).thenReturn("abcd");
+        when(mockProperties.getPropertyStr(SulWowza.HONEYBADGER_ENV_NAME_ENV_VAR)).thenReturn("test_env");
+
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+
+        testModule.initHoneybadger(appInstanceMock);
         testModule.registerUncaughtExceptionHandler();
 
         HoneybadgerUncaughtExceptionHandler curThreadUncaughtExceptionHandler =
@@ -525,7 +571,7 @@ public class TestSulWowza
         when(sessionMock.getQueryStr()).thenReturn(queryStr);
         when(sessionMock.getStreamName()).thenReturn(streamName);
         SulWowza spyModule = spy(testModule);
-        when(spyModule.verifyStacksToken(stacksToken, druid, filename, userIp)).thenReturn(true);
+        doReturn(true).when(spyModule).verifyStacksToken(stacksToken, druid, filename, userIp);
 
         spyModule.authorizeSession(sessionMock);
         verify(sessionMock).acceptSession();
@@ -545,7 +591,7 @@ public class TestSulWowza
         when(sessionMock.getQueryStr()).thenReturn(queryStr);
         when(sessionMock.getStreamName()).thenReturn(streamName);
         SulWowza spyModule = spy(testModule);
-        when(spyModule.verifyStacksToken(stacksToken, druid, filename, userIp)).thenReturn(false);
+        doReturn(false).when(spyModule).verifyStacksToken(stacksToken, druid, filename, userIp);
 
         spyModule.authorizeSession(sessionMock);
         verify(sessionMock).rejectSession();
@@ -702,7 +748,7 @@ public class TestSulWowza
         when(spyModule.validateStreamName(streamName)).thenReturn(true);
         when(spyModule.getDruid(streamName)).thenReturn(druid);
         when(spyModule.getFilename(streamName)).thenReturn(filename);
-        when(spyModule.verifyStacksToken(token, druid, filename, userIp)).thenReturn(true);
+        doReturn(true).when(spyModule).verifyStacksToken(token, druid, filename, userIp);
 
         assertEquals(true, spyModule.authorizePlay(queryString, userIp, streamName));
     }
@@ -724,7 +770,7 @@ public class TestSulWowza
         when(spyModule.validateStreamName(streamName)).thenReturn(true);
         when(spyModule.getDruid(streamName)).thenReturn(druid);
         when(spyModule.getFilename(streamName)).thenReturn(filename);
-        when(spyModule.verifyStacksToken(token, druid, filename, userIp)).thenReturn(false);
+        doReturn(false).when(spyModule).verifyStacksToken(token, druid, filename, userIp);
 
         assertEquals(false, spyModule.authorizePlay(queryString, userIp, streamName));
     }
@@ -739,7 +785,7 @@ public class TestSulWowza
 
         SulWowza spyModule = spy(testModule);
         when(spyModule.getStacksToken(queryString)).thenReturn(token);
-        when(spyModule.validateUserIp("1")).thenReturn(true);
+        doReturn(true).when(spyModule).validateUserIp("1");
 
         spyModule.authorizePlay(queryString, userIp, streamName);
         verify(spyModule).validateStacksToken(token);

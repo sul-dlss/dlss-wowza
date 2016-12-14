@@ -58,9 +58,7 @@ public class SulWowza extends ModuleBase
      * defined in the IModuleOnApp interface */
     public void onAppStart(IApplicationInstance appInstance)
     {
-        initHoneybadger();
-        registerUncaughtExceptionHandler();
-        initNoticeReporter();
+        initHoneybadger(appInstance);
         setStacksConnectionTimeout(appInstance);
         setStacksReadTimeout(appInstance);
         stacksTokenVerificationBaseUrl = getStacksUrl(appInstance);
@@ -151,13 +149,11 @@ public class SulWowza extends ModuleBase
      * Initalizes the Honeybadger error reporting tool. This is a public method so we can call
      * it from the tests. It's outside the constructor, since testing constructors with Mockito is a pain.
      */
-    public void initHoneybadger()
+    public void initHoneybadger(IApplicationInstance appInstance)
     {
-        if(environment == null)
-            environment = new SulEnvironment();
 
-        String apiKey = environment.getEnvironmentVariable(HONEYBADGER_API_KEY_ENV_VAR);
-        String honeybadgerEnv = environment.getEnvironmentVariable(HONEYBADGER_ENV_NAME_ENV_VAR);
+        String apiKey = appInstance.getProperties().getPropertyStr(HONEYBADGER_API_KEY_ENV_VAR);
+        String honeybadgerEnv = appInstance.getProperties().getPropertyStr(HONEYBADGER_ENV_NAME_ENV_VAR);
         if(apiKey == null)
         {
             getLogger().error(this.getClass().getSimpleName() + " unable to set up Honeybadger error reporting (missing API key environment variable?)");
@@ -174,6 +170,7 @@ public class SulWowza extends ModuleBase
             honeybadgerConfig.setApiKey(apiKey)
                              .setEnvironment(honeybadgerEnv)
                              .setApplicationPackage(this.getClass().getPackage().getName());
+            registerUncaughtExceptionHandler();
         }
     }
 
@@ -568,9 +565,14 @@ public class SulWowza extends ModuleBase
         HoneybadgerUncaughtExceptionHandler.registerAsUncaughtExceptionHandler(honeybadgerConfig);
     }
 
+    void setNoticeReporter(NoticeReporter noticeReporter)
+    {
+        this.noticeReporter = noticeReporter;
+    }
+
     void initNoticeReporter()
     {
-        noticeReporter = new HoneybadgerReporter(honeybadgerConfig);
+        setNoticeReporter(new HoneybadgerReporter(honeybadgerConfig));
     }
 
     NoticeReporter getNoticeReporter()

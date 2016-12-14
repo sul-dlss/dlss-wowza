@@ -26,7 +26,6 @@ public class TestVerifyStacksToken
     public void setUp()
     {
         testModule = new SulWowza();
-        testModule.initHoneybadger();
     }
 
     @Test
