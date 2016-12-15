@@ -40,19 +40,10 @@ public class SulWowza extends ModuleBase
     static int stacksReadTimeout;
     static NoticeReporter noticeReporter;
     StandardConfigContext honeybadgerConfig;
-    SulEnvironment environment;
 
 
     /** configuration is invalid if the stacks url is malformed */
     boolean invalidConfiguration = false;
-
-    public SulWowza()
-    {}
-
-    public SulWowza(SulEnvironment se)
-    {
-        environment = se;
-    }
 
     /** invoked when a Wowza application instance is started;
      * defined in the IModuleOnApp interface */
