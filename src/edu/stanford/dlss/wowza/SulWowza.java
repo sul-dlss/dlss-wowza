@@ -34,8 +34,6 @@ public class SulWowza extends ModuleBase
 {
     static String stacksTokenVerificationBaseUrl;
     static String stacksUrlErrorMsg = "rejecting due to invalid stacksURL property (" + stacksTokenVerificationBaseUrl + ")";
-    static final String HONEYBADGER_API_KEY_ENV_VAR = "WOWZA_HONEYBADGER_API_KEY";
-    static final String HONEYBADGER_ENV_NAME_ENV_VAR = "WOWZA_HONEYBADGER_ENV";
     static int stacksConnectionTimeout;
     static int stacksReadTimeout;
     static NoticeReporter noticeReporter;
@@ -136,33 +134,42 @@ public class SulWowza extends ModuleBase
         }
 	}
 
+    public void setHoneybadgerConfigContext(StandardConfigContext configContext)
+    {
+        honeybadgerConfig = configContext;
+    }
+
+    // TODO:  this approach expects the properties to be set in Application.xml
+    //   maybe that's good, or maybe we want to load a java properties file from our plugin jar itself?
+    public void initDefaultHoneybadgerConfigContext(IApplicationInstance appInstance)
+    {
+        setHoneybadgerConfigContext(new StandardConfigContext(appInstance.getProperties()));
+    }
+
     /**
      * Initalizes the Honeybadger error reporting tool. This is a public method so we can call
      * it from the tests. It's outside the constructor, since testing constructors with Mockito is a pain.
      */
     public void initHoneybadger(IApplicationInstance appInstance)
     {
+        initDefaultHoneybadgerConfigContext(appInstance);
 
-        String apiKey = appInstance.getProperties().getPropertyStr(HONEYBADGER_API_KEY_ENV_VAR);
-        String honeybadgerEnv = appInstance.getProperties().getPropertyStr(HONEYBADGER_ENV_NAME_ENV_VAR);
-        if(apiKey == null)
+        if (honeybadgerConfig.getApiKey() == null)
         {
-            getLogger().error(this.getClass().getSimpleName() + " unable to set up Honeybadger error reporting (missing API key environment variable?)");
+            getLogger().error(this.getClass().getSimpleName() + " unable to set up Honeybadger error reporting (missing API key property in Application.xml?)");
             invalidConfiguration = true;
         }
-        else if (honeybadgerEnv == null)
+        else if (honeybadgerConfig.getEnvironment() == null)
         {
-            getLogger().error(this.getClass().getSimpleName() + " unable to set up Honeybadger error reporting (missing Honeybadger environment specification?)");
+            getLogger().error(this.getClass().getSimpleName() + " unable to set up Honeybadger error reporting (missing Honeybadger environment property in Application.xml?)");
             invalidConfiguration = true;
         }
-        else
-        {
-            honeybadgerConfig = new StandardConfigContext();
-            honeybadgerConfig.setApiKey(apiKey)
-                             .setEnvironment(honeybadgerEnv)
-                             .setApplicationPackage(this.getClass().getPackage().getName());
-            registerUncaughtExceptionHandler();
-        }
+
+        if (invalidConfiguration)
+            return;
+
+        honeybadgerConfig.setApplicationPackage(this.getClass().getPackage().getName());
+        registerUncaughtExceptionHandler();
     }
 
 
