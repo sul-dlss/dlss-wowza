@@ -226,6 +226,16 @@
         <Value>2</Value>
         <Type>Integer</Type>
       </Property>
+      <Property>
+        <Name>HONEYBADGER_API_KEY</Name>
+        <Value>zyx987</Value>
+        <Type>String</Type>
+      </Property>
+      <Property>
+        <Name>ENV</Name>
+        <Value>example-environment</Value>
+        <Type>String</Type>
+      </Property>
     </Properties>
   </Application>
 </Root>

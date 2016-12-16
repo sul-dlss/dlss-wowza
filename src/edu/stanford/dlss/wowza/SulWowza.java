@@ -34,33 +34,20 @@ public class SulWowza extends ModuleBase
 {
     static String stacksTokenVerificationBaseUrl;
     static String stacksUrlErrorMsg = "rejecting due to invalid stacksURL property (" + stacksTokenVerificationBaseUrl + ")";
-    static final String HONEYBADGER_API_KEY_ENV_VAR = "WOWZA_HONEYBADGER_API_KEY";
-    static final String HONEYBADGER_ENV_NAME_ENV_VAR = "WOWZA_HONEYBADGER_ENV";
     static int stacksConnectionTimeout;
     static int stacksReadTimeout;
     static NoticeReporter noticeReporter;
     StandardConfigContext honeybadgerConfig;
-    SulEnvironment environment;
 
 
     /** configuration is invalid if the stacks url is malformed */
     boolean invalidConfiguration = false;
 
-    public SulWowza()
-    {}
-
-    public SulWowza(SulEnvironment se)
-    {
-        environment = se;
-    }
-
     /** invoked when a Wowza application instance is started;
      * defined in the IModuleOnApp interface */
     public void onAppStart(IApplicationInstance appInstance)
     {
-        initHoneybadger();
-        registerUncaughtExceptionHandler();
-        initNoticeReporter();
+        initHoneybadger(appInstance);
         setStacksConnectionTimeout(appInstance);
         setStacksReadTimeout(appInstance);
         stacksTokenVerificationBaseUrl = getStacksUrl(appInstance);
@@ -147,34 +134,70 @@ public class SulWowza extends ModuleBase
         }
 	}
 
+    public void setHoneybadgerConfigContext(StandardConfigContext configContext)
+    {
+        honeybadgerConfig = configContext;
+    }
+
+    // TODO:  this approach expects the properties to be set in Application.xml
+    //   maybe that's good, or maybe we want to load a java properties file from our plugin jar itself?
+    //
+    // TL;DR:  Application.xml should contain the API key and the instance environment (e.g. stage, prod),
+    // in its <Properties> section.  the property names should be "HONEYBADGER_API_KEY" and "ENV", respective.
+    // see conf/example/Application.xml.
+    public void initDefaultHoneybadgerConfigContext(IApplicationInstance appInstance)
+    {
+        // this is maybe too much background for here and should prob go in a readme or devops doc, but for now...
+        // the StandardConfigContext constructor first initializes the instance with a DefaultsConfigContext
+        // by way of a super() call to its parent class constructor (BaseChainedConfigContext).  that sets
+        // the honeybadger API URL.  the StandardConfigContext constructor can also take a map of properties,
+        // from which it will override default property values based on expected field names.  in particular,
+        // it'll look for the environment name first in the "ENV" field, then in the "JAVA_ENV" field.  it'll
+        // look for the API key in the "HONEYBADGER_API_KEY" field, then in the "honeybadger.api_key"* field.
+        // since IApplicationInstance.getProperties() returns a subclass of Map (WMSProperties) containing properties
+        // set in Application.xml, we can just set the property names we care about in Application.xml and they'll get
+        // picked up automatically.
+        //
+        // see also:
+        //  https://github.com/honeybadger-io/honeybadger-java#advanced-configuration
+        //  https://github.com/honeybadger-io/honeybadger-java/blob/1.1.0/src/main/java/io/honeybadger/reporter/config/DefaultsConfigContext.java
+        //  https://github.com/honeybadger-io/honeybadger-java/blob/1.1.0/src/main/java/io/honeybadger/reporter/config/BaseChainedConfigContext.java
+        //  https://github.com/honeybadger-io/honeybadger-java/blob/1.1.0/src/main/java/io/honeybadger/reporter/config/StandardConfigContext.java
+        //  https://github.com/honeybadger-io/honeybadger-java/blob/1.1.0/src/main/java/io/honeybadger/reporter/config/MapConfigContext.java
+        //  http://www.wowza.com/resources/serverapi/com/wowza/wms/application/IApplicationInstance.html#getProperties()
+        //  http://www.wowza.com/resources/serverapi/com/wowza/wms/application/WMSProperties.html
+        //
+        // * note: i suspect we shouldn't use "honeybadger.api_key", because it appears that
+        // MapConfigContext.getHoneybadgerUrl() erroneously looks there first for the URL, so we
+        // should avoid confusing it, to be safe:
+        // https://github.com/honeybadger-io/honeybadger-java/blob/1.1.0/src/main/java/io/honeybadger/reporter/config/MapConfigContext.java#L113
+        setHoneybadgerConfigContext(new StandardConfigContext(appInstance.getProperties()));
+    }
+
     /**
      * Initalizes the Honeybadger error reporting tool. This is a public method so we can call
      * it from the tests. It's outside the constructor, since testing constructors with Mockito is a pain.
      */
-    public void initHoneybadger()
+    public void initHoneybadger(IApplicationInstance appInstance)
     {
-        if(environment == null)
-            environment = new SulEnvironment();
+        initDefaultHoneybadgerConfigContext(appInstance);
 
-        String apiKey = environment.getEnvironmentVariable(HONEYBADGER_API_KEY_ENV_VAR);
-        String honeybadgerEnv = environment.getEnvironmentVariable(HONEYBADGER_ENV_NAME_ENV_VAR);
-        if(apiKey == null)
+        if (honeybadgerConfig.getApiKey() == null)
         {
-            getLogger().error(this.getClass().getSimpleName() + " unable to set up Honeybadger error reporting (missing API key environment variable?)");
+            getLogger().error(this.getClass().getSimpleName() + " unable to set up Honeybadger error reporting (missing API key property in Application.xml?)");
             invalidConfiguration = true;
         }
-        else if (honeybadgerEnv == null)
+        else if (honeybadgerConfig.getEnvironment() == null)
         {
-            getLogger().error(this.getClass().getSimpleName() + " unable to set up Honeybadger error reporting (missing Honeybadger environment specification?)");
+            getLogger().error(this.getClass().getSimpleName() + " unable to set up Honeybadger error reporting (missing Honeybadger environment property in Application.xml?)");
             invalidConfiguration = true;
         }
-        else
-        {
-            honeybadgerConfig = new StandardConfigContext();
-            honeybadgerConfig.setApiKey(apiKey)
-                             .setEnvironment(honeybadgerEnv)
-                             .setApplicationPackage(this.getClass().getPackage().getName());
-        }
+
+        if (invalidConfiguration)
+            return;
+
+        honeybadgerConfig.setApplicationPackage(this.getClass().getPackage().getName());
+        registerUncaughtExceptionHandler();
     }
 
 
@@ -568,9 +591,14 @@ public class SulWowza extends ModuleBase
         HoneybadgerUncaughtExceptionHandler.registerAsUncaughtExceptionHandler(honeybadgerConfig);
     }
 
+    void setNoticeReporter(NoticeReporter noticeReporter)
+    {
+        this.noticeReporter = noticeReporter;
+    }
+
     void initNoticeReporter()
     {
-        noticeReporter = new HoneybadgerReporter(honeybadgerConfig);
+        setNoticeReporter(new HoneybadgerReporter(honeybadgerConfig));
     }
 
     NoticeReporter getNoticeReporter()
