@@ -284,6 +284,7 @@ public class SulWowza extends ModuleBase
             if (druid != null && filename != null && verifyStacksToken(stacksToken, druid, filename, userIp))
                 httpSession.acceptSession();
             else
+                getLogger().info(this.getClass().getSimpleName() + " druid: " + druid + " filename:" + filename);
                 httpSession.rejectSession();
         }
         else
@@ -474,7 +475,7 @@ public class SulWowza extends ModuleBase
             stacksConn.connect();
             int status = stacksConn.getResponseCode();
             getLogger().info(this.getClass().getSimpleName() + " sent verify_token request to " + verifyStacksTokenUrl);
-            getLogger().debug(this.getClass().getSimpleName() + " verify_token response code is " + String.valueOf(status));
+            getLogger().info(this.getClass().getSimpleName() + " verify_token response code is " + String.valueOf(status));
             if (status == HttpURLConnection.HTTP_OK)
                 return true;
             else
