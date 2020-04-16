@@ -126,6 +126,27 @@ public class TestVerifyStacksToken
     }
 
     @Test
+    public void verifyTokenAgainstStacksService_missingStacksToken()
+    {
+        WMSProperties mockProperties = mock(WMSProperties.class);
+        when(mockProperties.getPropertyStr(anyString(), anyString())).thenReturn(SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL);
+        IApplicationInstance appInstanceMock = mock(IApplicationInstance.class);
+        when(appInstanceMock.getProperties()).thenReturn(mockProperties);
+        testModule.onAppStart(appInstanceMock);
+        String druid = "oo000oo0000";
+        String filename = "filename.ext";
+        String userIp = "0.0.0.0";
+        String expPath = "/media/" + druid + "/" + filename + "/verify_token";
+        String stacksToken = null;
+        // specifically list the expected encodings, as we've run into trouble with encoding methods that were encoding in unexpected ways
+        String expQueryStr = "?stacks_token=&user_ip=" + userIp;
+        String expUrlStr = SulWowza.DEFAULT_STACKS_TOKEN_VERIFICATION_BASEURL + expPath + expQueryStr;
+
+        URL resultUrl = testModule.getVerifyStacksTokenUrl(stacksToken, druid, filename, userIp);
+        assertEquals(expUrlStr, resultUrl.toString());
+    }
+
+    @Test
     /** expect it to return null and log an error message */
     public void getVerifyStacksTokenUrl_malformedUrl()
     {
