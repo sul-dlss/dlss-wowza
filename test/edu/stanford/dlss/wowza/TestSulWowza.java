@@ -562,17 +562,6 @@ public class TestSulWowza
     }
 
     @Test
-    public void authorizeSession_validatesStacksToken()
-    {
-        IHTTPStreamerSession sessionMock = mock(IHTTPStreamerSession.class);
-        when(sessionMock.getQueryStr()).thenReturn(queryStr);
-        SulWowza spyModule = spy(testModule);
-
-        spyModule.authorizeSession(sessionMock);
-        verify(spyModule).validateStacksToken(stacksToken);
-    }
-
-    @Test
     public void authorizeSession_getsUserIp()
     {
         IHTTPStreamerSession sessionMock = mock(IHTTPStreamerSession.class);
@@ -697,7 +686,6 @@ public class TestSulWowza
         SulWowza spyModule = spy(testModule);
 
         when(spyModule.getStacksToken(queryString)).thenReturn(token);
-        when(spyModule.validateStacksToken(token)).thenReturn(true);
         when(spyModule.validateUserIp(userIp)).thenReturn(true);
         when(spyModule.validateStreamName(streamName)).thenReturn(true);
         when(spyModule.getDruid(streamName)).thenReturn(druid);
@@ -719,7 +707,6 @@ public class TestSulWowza
         SulWowza spyModule = spy(testModule);
 
         when(spyModule.getStacksToken(queryString)).thenReturn(token);
-        when(spyModule.validateStacksToken(token)).thenReturn(true);
         when(spyModule.validateUserIp(userIp)).thenReturn(true);
         when(spyModule.validateStreamName(streamName)).thenReturn(true);
         when(spyModule.getDruid(streamName)).thenReturn(druid);
@@ -727,22 +714,6 @@ public class TestSulWowza
         when(spyModule.verifyStacksToken(token, druid, filename, userIp)).thenReturn(false);
 
         assertEquals(false, spyModule.authorizePlay(queryString, userIp, streamName));
-    }
-
-    @Test
-    public void authorizePlay_validatesStacksToken()
-    {
-        String queryString = "query";
-        String userIp = "1.1.1.1";
-        String streamName = "stream.mp4";
-        String token = "abcd";
-
-        SulWowza spyModule = spy(testModule);
-        when(spyModule.getStacksToken(queryString)).thenReturn(token);
-        when(spyModule.validateUserIp("1")).thenReturn(true);
-
-        spyModule.authorizePlay(queryString, userIp, streamName);
-        verify(spyModule).validateStacksToken(token);
     }
 
     @Test
@@ -755,7 +726,6 @@ public class TestSulWowza
 
         SulWowza spyModule = spy(testModule);
         when(spyModule.getStacksToken(queryString)).thenReturn(token);
-        when(spyModule.validateStacksToken(token)).thenReturn(true);
 
         spyModule.authorizePlay(queryString, userIp, streamName);
         verify(spyModule).validateUserIp(userIp);
@@ -771,7 +741,6 @@ public class TestSulWowza
 
         SulWowza spyModule = spy(testModule);
         when(spyModule.getStacksToken(queryString)).thenReturn(token);
-        when(spyModule.validateStacksToken(token)).thenReturn(true);
         when(spyModule.validateUserIp(userIp)).thenReturn(true);
 
         spyModule.authorizePlay(queryString, userIp, streamName);
@@ -788,7 +757,6 @@ public class TestSulWowza
 
         SulWowza spyModule = spy(testModule);
         when(spyModule.getStacksToken(queryString)).thenReturn(token);
-        when(spyModule.validateStacksToken(token)).thenReturn(true);
         when(spyModule.validateUserIp(userIp)).thenReturn(true);
         when(spyModule.validateStreamName(streamName)).thenReturn(true);
         when(spyModule.getDruid(streamName)).thenReturn(null);
@@ -807,7 +775,6 @@ public class TestSulWowza
 
         SulWowza spyModule = spy(testModule);
         when(spyModule.getStacksToken(queryString)).thenReturn(token);
-        when(spyModule.validateStacksToken(token)).thenReturn(true);
         when(spyModule.validateUserIp(userIp)).thenReturn(true);
         when(spyModule.validateStreamName(streamName)).thenReturn(true);
         when(spyModule.getFilename(streamName)).thenReturn(null);
@@ -837,7 +804,6 @@ public class TestSulWowza
         String token = "abcd";
         SulWowza spyModule = spy(testModule);
         when(spyModule.getStacksToken(queryString)).thenReturn(token);
-        when(spyModule.validateStacksToken(token)).thenReturn(true);
         when(spyModule.validateUserIp(userIp)).thenReturn(true);
         when(spyModule.validateStreamName(streamName)).thenReturn(true);
 
@@ -854,7 +820,6 @@ public class TestSulWowza
         String token = "abcd";
         SulWowza spyModule = spy(testModule);
         when(spyModule.getStacksToken(queryString)).thenReturn(token);
-        when(spyModule.validateStacksToken(token)).thenReturn(true);
         when(spyModule.validateUserIp(userIp)).thenReturn(true);
         when(spyModule.validateStreamName(streamName)).thenReturn(true);
 

@@ -276,7 +276,7 @@ public class SulWowza extends ModuleBase
         getLogger().debug(this.getClass().getSimpleName() + " userIp: " + userIp);
         String streamName = httpSession.getStreamName();
         getLogger().debug(this.getClass().getSimpleName() + " streamName: " + streamName);
-        if (validateStacksToken(stacksToken) && validateUserIp(userIp) && validateStreamName(streamName))
+        if (validateUserIp(userIp) && validateStreamName(streamName))
         {
             String druid = getDruid(streamName);
             String filename = getFilename(streamName);
@@ -293,7 +293,7 @@ public class SulWowza extends ModuleBase
     boolean authorizePlay(String queryStr, String userIp, String streamName)
     {
         String stacksToken = getStacksToken(queryStr);
-        if (validateStacksToken(stacksToken) && validateUserIp(userIp) && validateStreamName(streamName))
+        if (validateUserIp(userIp) && validateStreamName(streamName))
         {
             String druid = getDruid(streamName);
             String filename = getFilename(streamName);
@@ -331,22 +331,6 @@ public class SulWowza extends ModuleBase
                     return param.getValue();
         }
         return null;
-    }
-
-    /** stacksToken is created by rails encryption in digital_stacks_rails app;
-     *  we have chosen a min length of 10 here as a "safe" minimum length */
-    private static final int MIN_STACKS_TOKEN_LENGTH = 10;
-
-    boolean validateStacksToken(String stacksToken)
-    {
-        if (stacksToken != null && stacksToken.length() > MIN_STACKS_TOKEN_LENGTH)
-            return true;
-        else
-        {
-            getLogger().error(this.getClass().getSimpleName() + ": stacksToken missing or implausibly short" +
-                                (stacksToken == null ? "" : ": " + stacksToken));
-            return false;
-        }
     }
 
     boolean isValidInetAddr(String inetAddress)
@@ -447,7 +431,7 @@ public class SulWowza extends ModuleBase
     /** Assumption: stacksToken, druid, userIp and filename are all reasonable values (non-null, not empty, etc.) */
     URL getVerifyStacksTokenUrl(String stacksToken, String druid, String filename, String userIp)
     {
-        String queryStr = "stacks_token=" + escapeFormParam(stacksToken) + "&user_ip=" + escapeFormParam(userIp);
+        String queryStr = "stacks_token=" + escapeFormParam(stacksToken == null ? "" : stacksToken) + "&user_ip=" + escapeFormParam(userIp);
         String fullUrl = stacksTokenVerificationBaseUrl + "/media/" +
                         escapePathSegment(druid) + "/" + escapePathSegment(filename) +
                         "/verify_token?" + queryStr;
