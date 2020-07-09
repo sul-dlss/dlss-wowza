@@ -10,17 +10,17 @@ pipeline {
     
     stage('Build') {
       steps {
-        sh "pwd -P"
-        dir("${env.WORKSPACE}") {
-          sh "pwd -P"
-          sh './gradlew distTar'
-        }
-        sh "pwd -P"
+        sh 'JAVA_OPTS= ./gradlew deploymentJarRelaxed'
       }
     }
     
     stage('Publish artifacts') {
+      when {
+        branch "master"
+      }
+
       steps {
+        sh 'JAVA_OPTS= ./gradlew distTar'
         sh 'cp ./build/distributions/dlss-wowza-v*.tar /ci/artifacts/dlss-wowza/'
       }
     }

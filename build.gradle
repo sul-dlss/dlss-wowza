@@ -37,10 +37,6 @@ version = artifactVersionString
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.13'
-}
-
 repositories {
     mavenCentral() // for jacoco and kt3k.coveralls plugins
     jcenter() // for mockito
