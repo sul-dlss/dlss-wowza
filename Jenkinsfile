@@ -10,7 +10,12 @@ pipeline {
     
     stage('Build') {
       steps {
-        sh './gradlew'
+        sh "pwd -P"
+        dir("${env.WORKSPACE}") {
+          sh "pwd -P"
+          sh './gradlew distTar'
+        }
+        sh "pwd -P"
       }
     }
     
