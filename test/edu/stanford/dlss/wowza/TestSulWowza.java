@@ -544,6 +544,7 @@ public class TestSulWowza
     public void authorizeSession_getsStacksToken()
     {
         IHTTPStreamerSession sessionMock = mock(IHTTPStreamerSession.class);
+        when(sessionMock.getQueryStr()).thenReturn("");
         SulWowza spyModule = spy(testModule);
 
         spyModule.authorizeSession(sessionMock);
