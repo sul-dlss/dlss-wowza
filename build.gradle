@@ -99,7 +99,7 @@ task deploymentJar(type: Jar) {
 distributions {
     main {
         contents {
-            from(deploymentJar)
+            from(deploymentJarRelaxed)
             from { 'lib/runtime/' }
         }
     }
