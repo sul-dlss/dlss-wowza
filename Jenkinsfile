@@ -13,9 +13,9 @@ pipeline {
       }
     }
 
-    stage('Build') {
+    stage('Test') {
       steps {
-        sh 'JAVA_OPTS= ./gradlew deploymentJarRelaxed'
+        sh 'JAVA_OPTS= ./gradlew check'
       }
     }
 
