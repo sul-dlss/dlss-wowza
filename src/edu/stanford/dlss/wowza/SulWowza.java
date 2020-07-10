@@ -566,11 +566,13 @@ public class SulWowza extends ModuleBase
      */
     void registerUncaughtExceptionHandler()
     {
+        if (honeybadgerConfig == null) return;
         HoneybadgerUncaughtExceptionHandler.registerAsUncaughtExceptionHandler(honeybadgerConfig);
     }
 
     void initNoticeReporter()
     {
+        if (honeybadgerConfig == null) return;
         noticeReporter = new HoneybadgerReporter(honeybadgerConfig);
     }
 
@@ -589,6 +591,7 @@ public class SulWowza extends ModuleBase
     void reportNotice(String msg, Throwable cause)
     {
         Throwable t = new Throwable(msg, cause);
-        getNoticeReporter().reportError(t);
+        NoticeReporter reporter = getNoticeReporter();
+        if (reporter != null) reporter.reportError(t);
     }
 }
