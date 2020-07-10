@@ -235,17 +235,6 @@ public class TestSulWowza
         assertFalse(localTestModule.invalidConfiguration);
     }
 
-
-    @Test
-    public void registerUncaughtExceptionHandler_registersHoneybadger()
-    {
-        testModule.registerUncaughtExceptionHandler();
-
-        HoneybadgerUncaughtExceptionHandler curThreadUncaughtExceptionHandler =
-            (HoneybadgerUncaughtExceptionHandler) (Thread.getDefaultUncaughtExceptionHandler());
-        assertThat(curThreadUncaughtExceptionHandler, instanceOf(HoneybadgerUncaughtExceptionHandler.class));
-    }
-
     @Test
     public void onHTTPCupertinoStreamingSessionCreate_calls_authorizeSession_ifValidConfiguration()
     {
