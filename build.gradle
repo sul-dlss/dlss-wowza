@@ -42,11 +42,20 @@ repositories {
     jcenter() // for mockito
 }
 
+configurations {
+  include
+}
+
 dependencies {
+    // include these jars in the tar output
+    include "io.honeybadger:honeybadger-java:1.1.+"
+    include "commons-validator:commons-validator:1.6+"
+    include "com.google.guava:guava:29.+"
+
+    // and use these jars for testing:
     compile "io.honeybadger:honeybadger-java:1.1.+"
-    compile "commons-validator:commons-validator:1.6"
-    compile "com.google.guava:guava:29+"
-    compile "org.apache.httpcomponents:fluent-hc:4.5+"
+    compile "commons-validator:commons-validator:1.6+"
+    compile "com.google.guava:guava:29.+"
     compile fileTree('lib')
     testCompile "org.mockito:mockito-core:3.+"
     // Honeybadger (which we use for exception tracking) relies on the slf4j API.  Wowza includes slf4j
@@ -88,6 +97,8 @@ distributions {
     main {
         contents {
             from(deploymentJarRelaxed)
+            from(project.configurations.include)
+            exclude('slf4j*')
         }
     }
 }
