@@ -1,13 +1,13 @@
 plugins {
     id 'java'
     id 'jacoco'
-    id 'com.github.kt3k.coveralls' version '2.6.3'
-    id 'org.ajoberstar.grgit' version '1.4.2'
+    id 'com.github.kt3k.coveralls' version '2.10.1'
+    id 'org.ajoberstar.grgit' version '4.0.2'
     id 'distribution'
 }
 
 import org.ajoberstar.grgit.Grgit
-def grgit = Grgit.open(project.rootDir)
+def grgit = Grgit.open(dir: project.rootDir)
 
 String readVersionFile() {
     return new File('conf/version').text.trim()
@@ -37,38 +37,31 @@ version = artifactVersionString
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.13'
-}
-
 repositories {
     mavenCentral() // for jacoco and kt3k.coveralls plugins
     jcenter() // for mockito
 }
 
+configurations {
+  include
+}
+
 dependencies {
-    compile fileTree('lib')
-    testCompile "org.mockito:mockito-core:1.+"
+    // include these jars in the tar output
+    include "io.honeybadger:honeybadger-java:1.1.+"
+    include "commons-validator:commons-validator:1.6+"
+    include "com.google.guava:guava:29.+"
+
+    // and use these jars for testing:
+    implementation "io.honeybadger:honeybadger-java:1.1.+"
+    implementation "commons-validator:commons-validator:1.6+"
+    implementation "com.google.guava:guava:29.+"
+    implementation fileTree('lib')
+    testImplementation "org.mockito:mockito-core:3.+"
     // Honeybadger (which we use for exception tracking) relies on the slf4j API.  Wowza includes slf4j
     // jars, but we need to list the dependency here for the tests to be able to run (alternatively, slf4j
     // could be downloaded and committed in the lib dir).
-    testCompile group: 'org.slf4j', name: 'slf4j-simple', version: '1.6.4'
-}
-
-sourceSets {
-    main {
-        java {
-            srcDir 'src'
-        }
-    }
-    test {
-        java {
-            srcDir 'test'
-        }
-        resources {
-            srcDir 'test/resources'
-        }
-    }
+    testImplementation group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.30'
 }
 
 jacocoTestReport {
@@ -103,8 +96,9 @@ task deploymentJar(type: Jar) {
 distributions {
     main {
         contents {
-            from(deploymentJar)
-            from { 'lib/runtime/' }
+            from(deploymentJarRelaxed)
+            from(project.configurations.include)
+            exclude('slf4j*')
         }
     }
 }

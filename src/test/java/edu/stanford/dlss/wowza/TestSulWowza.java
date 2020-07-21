@@ -235,17 +235,6 @@ public class TestSulWowza
         assertFalse(localTestModule.invalidConfiguration);
     }
 
-
-    @Test
-    public void registerUncaughtExceptionHandler_registersHoneybadger()
-    {
-        testModule.registerUncaughtExceptionHandler();
-
-        HoneybadgerUncaughtExceptionHandler curThreadUncaughtExceptionHandler =
-            (HoneybadgerUncaughtExceptionHandler) (Thread.getDefaultUncaughtExceptionHandler());
-        assertThat(curThreadUncaughtExceptionHandler, instanceOf(HoneybadgerUncaughtExceptionHandler.class));
-    }
-
     @Test
     public void onHTTPCupertinoStreamingSessionCreate_calls_authorizeSession_ifValidConfiguration()
     {
@@ -555,6 +544,7 @@ public class TestSulWowza
     public void authorizeSession_getsStacksToken()
     {
         IHTTPStreamerSession sessionMock = mock(IHTTPStreamerSession.class);
+        when(sessionMock.getQueryStr()).thenReturn("");
         SulWowza spyModule = spy(testModule);
 
         spyModule.authorizeSession(sessionMock);
