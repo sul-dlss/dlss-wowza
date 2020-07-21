@@ -53,15 +53,15 @@ dependencies {
     include "com.google.guava:guava:29.+"
 
     // and use these jars for testing:
-    compile "io.honeybadger:honeybadger-java:1.1.+"
-    compile "commons-validator:commons-validator:1.6+"
-    compile "com.google.guava:guava:29.+"
-    compile fileTree('lib')
-    testCompile "org.mockito:mockito-core:3.+"
+    implementation "io.honeybadger:honeybadger-java:1.1.+"
+    implementation "commons-validator:commons-validator:1.6+"
+    implementation "com.google.guava:guava:29.+"
+    implementation fileTree('lib')
+    testImplementation "org.mockito:mockito-core:3.+"
     // Honeybadger (which we use for exception tracking) relies on the slf4j API.  Wowza includes slf4j
     // jars, but we need to list the dependency here for the tests to be able to run (alternatively, slf4j
     // could be downloaded and committed in the lib dir).
-    testCompile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.30'
+    testImplementation group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.30'
 }
 
 jacocoTestReport {
