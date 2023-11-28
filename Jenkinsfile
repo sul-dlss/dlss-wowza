@@ -15,7 +15,7 @@ pipeline {
 
     stage('Test') {
       steps {
-        sh 'JAVA_OPTS= ./gradlew check'
+        sh 'JAVA_OPTS= gradle check'
       }
     }
 
@@ -25,7 +25,7 @@ pipeline {
       }
 
       steps {
-        sh 'JAVA_OPTS= ./gradlew distTar'
+        sh 'JAVA_OPTS= gradle distTar'
         sh 'cp ./build/distributions/dlss-wowza-v*.tar /ci/artifacts/dlss-wowza/'
       }
     }

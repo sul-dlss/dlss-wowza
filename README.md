@@ -2,11 +2,11 @@
 [![GitHub version](https://badge.fury.io/gh/sul-dlss%2Fdlss-wowza.svg)](https://badge.fury.io/gh/sul-dlss%2Fdlss-wowza)
 
 # dlss-wowza
-Wowza server side modules.  Uses Gradle (with the Gradle wrapper) as the build tool (akin to Ruby's rake).
+Wowza server side modules.  Uses Gradle as the build tool (akin to Ruby's rake).
 
 ### To compile and run tests of this code:
 
-  ./gradlew build
+  gradle build
 
 Before running this command, you'll need to set these environment variables:
 - `WOWZA_HONEYBADGER_API_KEY`:  You can get the API key from our [Honeybadger](https://www.honeybadger.io/) project (`DLSS-Wowza`).  Note that you may need to get added to the `DLSS-Wowza` project as a user in order to obtain the key (someone from Devops should be able to add you).
