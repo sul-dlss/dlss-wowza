@@ -6,7 +6,22 @@ Wowza server side modules.  Uses Gradle (with the Gradle wrapper) as the build t
 
 ### To compile and run tests of this code:
 
-  ./gradlew build
+#### Dependencies
+
+##### Gradle
+
+```
+brew install gradle
+```
+
+##### Java
+
+```
+brew install openjdk@21
+export JAVA_HOME=/usr/local/opt/openjdk@21
+```
+
+  gradle build
 
 Before running this command, you'll need to set these environment variables:
 - `WOWZA_HONEYBADGER_API_KEY`:  You can get the API key from our [Honeybadger](https://www.honeybadger.io/) project (`DLSS-Wowza`).  Note that you may need to get added to the `DLSS-Wowza` project as a user in order to obtain the key (someone from Devops should be able to add you).
