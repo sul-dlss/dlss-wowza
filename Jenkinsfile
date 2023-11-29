@@ -15,7 +15,7 @@ pipeline {
 
     stage('Test') {
       steps {
-        sh 'JAVA_OPTS= ./gradlew check'
+        sh 'JAVA_OPTS= ./gradlew clean check'
       }
     }
 
