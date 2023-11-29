@@ -2,11 +2,36 @@
 [![GitHub version](https://badge.fury.io/gh/sul-dlss%2Fdlss-wowza.svg)](https://badge.fury.io/gh/sul-dlss%2Fdlss-wowza)
 
 # dlss-wowza
-Wowza server side modules.  Uses Gradle (with the Gradle wrapper) as the build tool (akin to Ruby's rake).
 
-### To compile and run tests of this code:
+Wowza server side modules.  Uses Wowza provided Java API to restrict access to content to authorized users.  Relies on Stacks for minting and verifying tokens.
 
-  ./gradlew build
+## Build info
+
+Uses Gradle (via Gradle wrapper) as the build tool (akin to Ruby's rake).
+
+### Java version / Consider using jenv
+
+We should be trying to use a recent and supported version of Java in local development, on CI/build servers, and on deployed Wowza servers.
+
+For local development, `jenv` (akin to e.g. `rbenv` or `n`) can help if you need to manage multiple versions of Java.  [Documentation for jenv](https://github.com/jenv/jenv).
+
+### See if there's a Gradle wrapper upgrade
+
+If it's been a few weeks or months since the project has been touched, you can install the latest Gradle by running:
+
+```sh
+./gradlew wrapper --gradle-version=latest --distribution-type=bin # you can also install a specific version, e.g. --gradle-version=8.4
+```
+
+If updates are generated, please commit the changes (likely `gradle/wrapper/gradle-wrapper.properties`, `gradlew`, `gradlew.bat`, `gradle/wrapper/gradle-wrapper.jar`; possibly `build.gradle` if you have to fix deprecated build config).
+
+See "Upgrade with the Gradle Wrapper" in the [installation instructions](https://gradle.org/install/), and the more detailed [Gradle Wrapper doc](https://docs.gradle.org/8.4/userguide/gradle_wrapper.html).
+
+### To compile and run tests of this code
+
+```sh
+./gradlew build
+```
 
 Before running this command, you'll need to set these environment variables:
 - `WOWZA_HONEYBADGER_API_KEY`:  You can get the API key from our [Honeybadger](https://www.honeybadger.io/) project (`DLSS-Wowza`).  Note that you may need to get added to the `DLSS-Wowza` project as a user in order to obtain the key (someone from Devops should be able to add you).
@@ -14,15 +39,25 @@ Before running this command, you'll need to set these environment variables:
 
 If the environment variables are not set, your tests will fail.
 
-### Using the SulWowza plugin
+### To just run tests and generate a coverage report
 
-#### Adding the SulWowza plugin to your Wowza Application
+```sh
+./gradlew check # will invoke build tasks as needed
+```
+
+#### Coverage report
+
+The coverage report is available in the project directory at `build/reports/jacoco/test/html/index.html`.
+
+## Using the SulWowza plugin
+
+### Adding the SulWowza plugin to your Wowza Application
 
 In the Wowza GUI interface, select your Wowza Application, and click on the modules tab. Add a module with the class name `edu.stanford.dlss.wowza.SulWowza` (the name and description are arbitrary strings).
 
 Alternatively, you can manually edit Application.xml and then reload the Wowza application.  The `<Modules>` element in `Application.xml` should include something like this:
 
-```
+```xml
   <Module>
     <Name>SulWowza</Name>
     <Description>SUL Authorization against Stacks</Description>
@@ -30,23 +65,23 @@ Alternatively, you can manually edit Application.xml and then reload the Wowza a
   </Module>
 ```
 
-#### Properties settings used by SulWowza plugin
+### Properties settings used by SulWowza plugin
 
-You can configure the SulWowza plugin using Wowza's GUI interface, but you will also need to add some properties.The three properties our SulWowza plugin uses are:
+You can configure the SulWowza plugin using Wowza's GUI interface, but you will also need to add some properties. The three properties our SulWowza plugin uses are:
 
-- stacksURL
+- `stacksURL`
   - Required
   - the baseURL for stacks_token verifications
-- stacksConnectionTimeout
+- `stacksConnectionTimeout`
   - stacks service connection timeout (time to establish a connection), in seconds; default is 30
-- stacksReadTimeout
+- `stacksReadTimeout`
   - stacks service connection timeout (time for reading stream after connection is established), in seconds; default is 30
 
 You can add these properties using the Wowza GUI interface: select your Wowza application, click on the properties tab;  scroll to the bottom for custom properties and add them.
 
 Alternatively, you can manually edit Application.xml and then reload the Wowza application.  The `<Properties>` element in `Application.xml` should include something like this:
 
-```
+```xml
   <Property>
     <!-- stacks token verification baseURL -->
     <Name>stacksURL</Name>
@@ -67,7 +102,7 @@ Alternatively, you can manually edit Application.xml and then reload the Wowza a
   </Property>
 ```
 
-### To deploy a new version of the plugin code to the VM:
+## To deploy a new version of the plugin code to the VM
 
 - Configuring a Wowza application to use the plugin is described above, and can happen independently of the plugin Jar deployment.
 - Release a new (tagged) version of the plugin:
@@ -86,7 +121,7 @@ Alternatively, you can manually edit Application.xml and then reload the Wowza a
 - Update puppet to deploy the specific versioned artifact to the desired VM.
   - make a PR in puppet to do this, following puppet practices.  (or ask your friendly devops rep to help)
 
-### To deploy locally (e.g. on dev laptop)
+## To deploy locally (e.g. on dev laptop)
 
 - install Wowza on laptop
 - create Wowza application instance
@@ -96,25 +131,39 @@ Alternatively, you can manually edit Application.xml and then reload the Wowza a
 - copy jar to /your/wowza/lib
 - start up Wowza
 
-### To see Gradle tasks
+## More useful Gradle pointers
 
-  ./gradlew tasks
+### Get rid of existing build artifacts
+
+```sh
+./gradlew clean
+```
+
+Can be combined with other tasks, e.g. `./gradlew clean check`.
+
+### To see Gradle tasks (with descriptions)
+
+```sh
+./gradlew tasks --all
+```
 
 ### For help with Gradle
 
-  ./gradlew --help
-
-
-## Deprecated build instructions (possibly useful for troubleshooting, eventually remove?)
-
-### To manually compile
-
+```sh
+./gradlew --help
 ```
+
+
+# Deprecated build instructions (possibly useful for troubleshooting, eventually remove?)
+
+## To manually compile
+
+```sh
 javac -d classes -cp .:libs/wms-restlet-2.2.2.jar:libs/wms-server.jar:libs/wms-httpstreamer-cupertinostreaming.jar:libs/wms-httpstreamer-mpegdashstreaming.jar:libs/log4j-1.2.17.jar:libs/junit.jar src/edu/stanford/dlss/wowza/SulWowza.java src/edu/stanford/dlss/wowza/SulWowzaTester.java
 ```
 
-### To manually create jar
+## To manually create jar
 
-```
+```sh
 jar cf dlss-wowza.jar classes/edu/stanford/dlss/wowza/SulWowza* conf
 ```
