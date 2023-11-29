@@ -82,7 +82,7 @@ task deploymentJarRelaxed(type: Jar) {
                  "deployVersion": "${deployVersion}",
                  "artifactVersionString": "${artifactVersionString}")
     }
-    with jar
+    dependsOn(jar)
 }
 
 task deploymentJar(type: Jar) {
@@ -90,7 +90,7 @@ task deploymentJar(type: Jar) {
         assert deployVersionMatchesGitTag(deployVersion, gitTag) :
             "deployVersion must match current git tag (or invoke deploymentJarRelaxed instead). deployVersion=${deployVersion} gitTag=${gitTag}"
     }
-    with deploymentJarRelaxed
+    dependsOn(deploymentJarRelaxed)
 }
 
 distributions {
