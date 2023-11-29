@@ -15,7 +15,19 @@ pipeline {
 
     stage('Test') {
       steps {
-        sh 'JAVA_OPTS= ./gradlew clean check'
+        withEnv(["JAVA_HOME=/home/$USER/openjdk21/jdk-21.0.1", "PATH=$JAVA_HOME/bin:$PATH"]) {
+          sh 'printenv | sort'
+          sh 'java -version' // print the java version being used, to aid in debugging build issues
+
+          // if the build breaks, and it's necessary to temporarily pin to a known working gradle
+          // version, can do e.g. --gradle-version=8.4
+          sh 'JAVA_OPTS= ./gradlew wrapper --gradle-version=latest --distribution-type=bin'
+          sh './gradlew --version' // print some basic gradle info, to aid in debugging build issues
+
+          // make extra sure that no stale build artifacts are confounding things -- can revisit if builds are
+          // unpleasantly slow
+          sh 'JAVA_OPTS= ./gradlew --no-build-cache --no-configuration-cache clean check'
+        }
       }
     }
 
