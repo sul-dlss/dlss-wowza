@@ -25,7 +25,7 @@ pipeline {
 
         // make extra sure that no stale build artifacts are confounding things -- can revisit if builds are
         // unpleasantly slow
-        sh 'JAVA_OPTS= ./gradlew --no-build-cache --no-configuration-cache clean check'
+        sh 'JAVA_OPTS= JDK_JAVA_OPTIONS= ./gradlew --no-build-cache --no-configuration-cache clean check'
       }
     }
 
